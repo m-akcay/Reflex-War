@@ -9,8 +9,6 @@ public class GameManager : MonoBehaviour
     private List<GameObject> buttons;
     [SerializeField]
     private List<GameObject> referenceButtons;
-    private List<Material> buttonMaterials;
-    private List<Material> referenceButtonMaterials;
     [SerializeField]
     private Camera mainCam;
     private float screenWidth;
@@ -21,23 +19,21 @@ public class GameManager : MonoBehaviour
     private List<int> chosenColorIndices;
     [SerializeField]
     private List<Vector3> BUTTON_POSITIONS;
+
+    private bool reflexPhase = false;
+    private bool drawing = false;
+    private int buttonShouldBeHitIdx = 0;
+    [SerializeField]
+    private LayerMask mask;
     void Start()
     {
-        buttonMaterials = new List<Material>();
-        referenceButtonMaterials = new List<Material>();
         foreach (var button in buttons)
         {
-            var renderer = button.GetComponent<Renderer>();
-            //renderer.enabled = false;
-            buttonMaterials.Add(renderer.material);
             button.SetActive(false);
         }
 
         foreach (var button in referenceButtons)
         {
-            var renderer = button.GetComponent<Renderer>();
-            //renderer.enabled = false;
-            referenceButtonMaterials.Add(renderer.material);
             button.SetActive(false);
         }
 
@@ -51,15 +47,47 @@ public class GameManager : MonoBehaviour
         {
             setReferenceButtons();
             setButtons();
+            reflexPhase = true;
         }
-        //if (Input.GetMouseButton(0))
-        //{
-        //    var wpos = new Vector3().fromVec2(Input.mousePosition);
-        //    wpos.z = fixedZ;
-        //    wpos = mainCam.ScreenToWorldPoint(wpos);
-        //    Debug.Log(Input.mousePosition);
-        //    mainCam.GetComponent<LineRenderer>().SetPosition(1, wpos);
-        //}
+        
+        if (reflexPhase && Input.GetMouseButton(0))
+        {
+            var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
+
+            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit outHit;
+            bool hit = Physics.Raycast(ray, out outHit, 3, mask);
+            var buttonShouldBeHit = buttons[buttonShouldBeHitIdx];
+            if (hit && outHit.collider.gameObject == buttonShouldBeHit)
+            {
+                Debug.Log(outHit.collider.gameObject.name);
+                drawing = true;
+                if (!lineRenderer.enabled)
+                {
+                    lineRenderer.enabled = true;
+                    lineRenderer.positionCount = 2;
+                }
+
+                lineRenderer.SetPosition(buttonShouldBeHitIdx, buttonShouldBeHit.transform.position);
+                buttonShouldBeHitIdx++;
+            }
+
+            if (drawing)
+            {
+                var wpos = new Vector3().fromVec2(Input.mousePosition);
+                wpos.z = fixedZ;
+                wpos = mainCam.ScreenToWorldPoint(wpos);
+                lineRenderer.SetPosition(lineRenderer.positionCount - 1, wpos);
+            }
+            
+        }
+
+        if (Input.GetMouseButtonUp(0))
+        {
+            drawing = false;
+            var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
+            lineRenderer.positionCount--;
+        }
     }
     public void setReferenceButtons()
     {
@@ -75,7 +103,7 @@ public class GameManager : MonoBehaviour
             var referenceButton = referenceButtons[i];
             referenceButton.SetActive(true);
             referenceButton.transform.position = mainCam.ScreenToWorldPoint(screenPos);
-            referenceButtonMaterials[i].SetColor("Color_2AB042FD", COLORS[chosenColorIndices[i]]);
+            referenceButton.GetComponent<SpriteRenderer>().color = COLORS[chosenColorIndices[i]];
         }
        
     }
@@ -87,8 +115,7 @@ public class GameManager : MonoBehaviour
             var button = buttons[i];
             button.SetActive(true);
             button.transform.position = BUTTON_POSITIONS[randPosIdx[i]];
-            buttonMaterials[i].SetColor("Color_2AB042FD", COLORS[chosenColorIndices[i]]);
-            //renderer.color = COLORS[chosenColorIndices[i]];
+            button.GetComponent<SpriteRenderer>().color = COLORS[chosenColorIndices[i]];
         }
     }
     private List<int> getRandomPositionIdx()
@@ -111,15 +138,15 @@ public class GameManager : MonoBehaviour
         COLORS = new List<Color>();
 
         // minimum difference between colors is set to be 0.2f
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
-            float r = i / 4.0f;
-            for (int j = 0; j < 5; j++)
+            float r = i / 3.0f;
+            for (int j = 0; j < 4; j++)
             {
-                float g = j / 4.0f;
-                for (int k = 0; k < 5; k++)
+                float g = j / 3.0f;
+                for (int k = 0; k < 4; k++)
                 {
-                    float b = k / 4.0f;
+                    float b = k / 3.0f;
                     this.COLORS.Add(new Color(r, g, b));
                 }
             }
@@ -146,7 +173,7 @@ public class GameManager : MonoBehaviour
         int aspectHeight = 9;
 
         var offset = new Vector2((Screen.width * 0.95f) / aspectWidth,
-                                (Screen.height * 0.9f) / aspectHeight);
+                                (Screen.height * 0.9f) / aspectHeight) + new Vector2(0.1f, 0.05f);
         var startPos = new Vector2(Screen.width * 0.05f, Screen.height * 0.05f);
         for (int i = 0; i < aspectWidth; i++)
         {
@@ -158,19 +185,6 @@ public class GameManager : MonoBehaviour
                 buttonPos = mainCam.ScreenToWorldPoint(buttonPos);
                 this.BUTTON_POSITIONS.Add(buttonPos);
             }
-        }
-    }
-
-    private void OnDestroy()
-    {
-        foreach (var mat in this.buttonMaterials)
-        {
-            Destroy(mat);
-        }
-
-        foreach (var mat in this.referenceButtonMaterials)
-        {
-            Destroy(mat);
         }
     }
 }
