@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviour
 
         createPositionArray();
         createColorArray();
+
     }
 
     void Update()
@@ -49,45 +50,52 @@ public class GameManager : MonoBehaviour
             setButtons();
             reflexPhase = true;
         }
-        
-        if (reflexPhase && Input.GetMouseButton(0))
-        {
-            var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
 
-            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-            RaycastHit outHit;
-            bool hit = Physics.Raycast(ray, out outHit, 3, mask);
-            var buttonShouldBeHit = buttons[buttonShouldBeHitIdx];
-            if (hit && outHit.collider.gameObject == buttonShouldBeHit)
+        if (reflexPhase)
+        {
+            if (!mainCam.orthographic)
+                mainCam.orthographic = true;
+            if (Input.GetMouseButton(0))
             {
-                Debug.Log(outHit.collider.gameObject.name);
-                drawing = true;
-                if (!lineRenderer.enabled)
+                var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
+                Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+                RaycastHit outHit;
+                bool hit = Physics.Raycast(ray, out outHit, 3, mask);
+                var buttonShouldBeHit = buttons[buttonShouldBeHitIdx];
+                if (hit && outHit.collider.gameObject == buttonShouldBeHit)
                 {
-                    lineRenderer.enabled = true;
-                    lineRenderer.positionCount = 2;
+                    Debug.Log(outHit.collider.gameObject.name);
+                    drawing = true;
+                    if (!lineRenderer.enabled)
+                    {
+                        lineRenderer.enabled = true;
+                        lineRenderer.positionCount = 2;
+                    }
+                    else
+                        lineRenderer.positionCount++;
+
+                    lineRenderer.SetPosition(buttonShouldBeHitIdx, buttonShouldBeHit.transform.position);
+                    buttonShouldBeHitIdx++;
                 }
 
-                lineRenderer.SetPosition(buttonShouldBeHitIdx, buttonShouldBeHit.transform.position);
-                buttonShouldBeHitIdx++;
-            }
+                if (drawing)
+                {
+                    var wpos = new Vector3().fromVec2(Input.mousePosition);
+                    wpos.z = fixedZ;
+                    wpos = mainCam.ScreenToWorldPoint(wpos);
+                    lineRenderer.SetPosition(lineRenderer.positionCount - 1, wpos);
+                }
 
-            if (drawing)
+            }
+            else if (drawing && Input.GetMouseButtonUp(0))
             {
-                var wpos = new Vector3().fromVec2(Input.mousePosition);
-                wpos.z = fixedZ;
-                wpos = mainCam.ScreenToWorldPoint(wpos);
-                lineRenderer.SetPosition(lineRenderer.positionCount - 1, wpos);
+                drawing = false;
+                var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
+                lineRenderer.positionCount--;
+                buttonShouldBeHitIdx--;
             }
-            
         }
-
-        if (Input.GetMouseButtonUp(0))
-        {
-            drawing = false;
-            var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
-            lineRenderer.positionCount--;
-        }
+        
     }
     public void setReferenceButtons()
     {
