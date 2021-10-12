@@ -2538,7 +2538,7 @@ MonoBehaviour:
   - {fileID: 1824667953}
   - {fileID: 335434286}
   - {fileID: 1263228495}
-  numOfActiveButtons: 10
+  numOfActiveButtons: 4
   BUTTON_POSITIONS: []
   mask:
     serializedVersion: 2

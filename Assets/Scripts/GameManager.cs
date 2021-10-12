@@ -6,8 +6,6 @@ public class GameManager : MonoBehaviour
 {
     private float fixedZ = 1.5f;
     [SerializeField]
-    private List<GameObject> buttons;
-    [SerializeField]
     private List<GameObject> referenceButtons;
     [SerializeField]
     public static Camera mainCam;
@@ -16,7 +14,6 @@ public class GameManager : MonoBehaviour
     private int numOfActiveButtons;
     private List<Color> COLORS;
     private List<int> chosenColorIndices;
-    [SerializeField]
     private List<Vector3> BUTTON_POSITIONS;
 
     private bool reflexPhase = false;
@@ -24,8 +21,6 @@ public class GameManager : MonoBehaviour
     private int buttonShouldBeHitIdx = 0;
     [SerializeField]
     private LayerMask mask;
-    [SerializeField]
-    private GameObject[] lineSprites;
 
     private List<ReflexButton> reflexButtons;
     // max scaleX is 23 (full width)
@@ -35,13 +30,12 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         mainCam = Camera.main;
-        buttons = new List<GameObject>(GameObject.FindGameObjectsWithTag("Button"));
+        var buttons = new List<GameObject>(GameObject.FindGameObjectsWithTag("Button"));
         var lines = new List<GameObject>(GameObject.FindGameObjectsWithTag("Line"));
         referenceButtons = new List<GameObject>(GameObject.FindGameObjectsWithTag("ReferenceButton"));
         reflexButtons = new List<ReflexButton>();
         for (int i = 0; i < buttons.Count; i++)
         {
-            buttons[i].SetActive(false);
             reflexButtons.Add(new ReflexButton(buttons[i], lines[i]));
         }
 
@@ -70,7 +64,7 @@ public class GameManager : MonoBehaviour
                 Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
                 RaycastHit outHit;
                 bool hit = Physics.Raycast(ray, out outHit, 3, mask);
-                var buttonShouldBeHit = buttons[buttonShouldBeHitIdx];
+                var buttonShouldBeHit = reflexButtons[buttonShouldBeHitIdx].buttonGo;
                 if (hit && outHit.collider.gameObject == buttonShouldBeHit)
                 {
                     Debug.Log(outHit.collider.gameObject.name);
@@ -78,10 +72,14 @@ public class GameManager : MonoBehaviour
                     if (buttonShouldBeHitIdx > 0)
                     {
                         Debug.Log(buttonShouldBeHitIdx);
-                        var finalPos = reflexButtons[buttonShouldBeHitIdx].buttonGo.transform.position;
+                        var finalPos = buttonShouldBeHit.transform.position;
                         reflexButtons[buttonShouldBeHitIdx - 1].finalizeLine(finalPos);
+                        if (buttonShouldBeHitIdx == numOfActiveButtons - 1)
+                        {
+                            finishReflexPhase();
+                            return;
+                        }
                     }
-                    reflexButtons[buttonShouldBeHitIdx].setLineColor(COLORS[chosenColorIndices[buttonShouldBeHitIdx]]);
                     buttonShouldBeHitIdx++;
                 }
 
@@ -99,56 +97,13 @@ public class GameManager : MonoBehaviour
         }
         
     }
-    private void setLineSprite()
+    private void finishReflexPhase()
     {
-        var wpos = new Vector3().fromVec2(Input.mousePosition);
-        wpos.z = fixedZ;
-        wpos = mainCam.ScreenToWorldPoint(wpos);
-
-        var activeIdx = buttonShouldBeHitIdx - 1;
-        var buttonShouldBeHit = buttons[activeIdx];
-        var lineSprite = lineSprites[activeIdx];
-
-        float distance = Vector3.Distance(buttonShouldBeHit.transform.position, wpos);
-        lineSprite.transform.localScale = new Vector3(distance * SCREEN_FACTOR, 0.3f, 1);
-
-        var midPt = (buttonShouldBeHit.transform.position + wpos) / 2;
-        lineSprite.transform.position = midPt;
-
-        var screenPtButton = mainCam.WorldToScreenPoint(buttonShouldBeHit.transform.position);
-        var angle = Vector3.Angle(new Vector2(1, 0), Input.mousePosition - screenPtButton);
-        if (screenPtButton.y > Input.mousePosition.y)
-            angle = -angle;
-
-        lineSprite.transform.localRotation = Quaternion.Euler(0, 0, angle);
+        this.reflexPhase = false;
+        reflexButtons.ForEach(btn => btn.deactivate());
+        referenceButtons.ForEach(btn => btn.SetActive(false));
+        buttonShouldBeHitIdx = 0;
     }
-
-    [SerializeField]
-    private GameObject prevButton;
-    [SerializeField]
-    private GameObject button;
-    private void finalizeLineSprite()
-    {
-        var wpos = buttons[buttonShouldBeHitIdx].transform.position;
-        var mpos = mainCam.WorldToScreenPoint(wpos);
-        var activeIdx = buttonShouldBeHitIdx - 1;
-        var buttonShouldBeHit = buttons[activeIdx];
-        var lineSprite = lineSprites[activeIdx];
-
-        float distance = Vector3.Distance(buttonShouldBeHit.transform.position, wpos);
-        lineSprite.transform.localScale = new Vector3(distance * SCREEN_FACTOR, 0.3f, 1);
-
-        var midPt = (buttonShouldBeHit.transform.position + wpos) / 2;
-        lineSprite.transform.position = midPt;
-
-        var screenPtButton = mainCam.WorldToScreenPoint(buttonShouldBeHit.transform.position);
-        var angle = Vector3.Angle(new Vector2(1, 0), mpos - screenPtButton);
-        if (screenPtButton.y > mpos.y)
-            angle = -angle;
-        Debug.Log(angle);
-        lineSprite.transform.localRotation = Quaternion.Euler(0, 0, angle);
-    }
-
     public void setReferenceButtons()
     {
         float buttonSpacing = Screen.width * 0.09f;
@@ -172,10 +127,8 @@ public class GameManager : MonoBehaviour
         var randPosIdx = getRandomPositionIdx();
         for (int i = 0; i < this.numOfActiveButtons; i++)
         {
-            var button = buttons[i];
-            button.SetActive(true);
-            button.transform.position = BUTTON_POSITIONS[randPosIdx[i]];
-            button.GetComponent<SpriteRenderer>().color = COLORS[chosenColorIndices[i]];
+            reflexButtons[i].setPositionAndColor(BUTTON_POSITIONS[randPosIdx[i]], COLORS[chosenColorIndices[i]]);
+            reflexButtons[i].activate();
         }
     }
     private List<int> getRandomPositionIdx()
@@ -247,4 +200,5 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
 }

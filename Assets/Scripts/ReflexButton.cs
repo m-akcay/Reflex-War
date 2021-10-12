@@ -11,8 +11,26 @@ public class ReflexButton
     public ReflexButton(GameObject buttonGo, GameObject lineSprite)
     {
         this.buttonGo = buttonGo;
+        buttonGo.SetActive(false);
         this.lineSprite = lineSprite;
         Debug.Log(this.buttonGo.name + "   " + this.lineSprite.name);
+    }
+    public void activate()
+    {
+        this.buttonGo.SetActive(true);
+        this.lineSprite.SetActive(true);
+    }
+    public void deactivate()
+    {
+        this.buttonGo.SetActive(false);
+        this.lineSprite.transform.position = new Vector3(100, 100);
+        this.lineSprite.SetActive(false);
+    }
+    public void setPositionAndColor(Vector3 pos, Color color)
+    {
+        this.buttonGo.transform.position = pos;
+        this.buttonGo.GetComponent<SpriteRenderer>().color = color;
+        this.lineSprite.GetComponent<SpriteRenderer>().color = color;
     }
     public void setLineColor(Color color)
     {
