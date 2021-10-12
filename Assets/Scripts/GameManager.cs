@@ -17,7 +17,6 @@ public class GameManager : MonoBehaviour
     private List<Vector3> BUTTON_POSITIONS;
     public List<ReflexButton> reflexButtons { get; private set; }
     public bool reflexPhase { get; private set; }
-    public bool warPhase { get; private set; }
     private float phaseStartTime;
     public float reactionTime 
     { 
@@ -32,7 +31,6 @@ public class GameManager : MonoBehaviour
         mainCam = Camera.main;
         difficulty = 1;
         reflexPhase = false;
-        warPhase = false;
         var buttons = new List<GameObject>(GameObject.FindGameObjectsWithTag("Button"));
         var lines = new List<GameObject>(GameObject.FindGameObjectsWithTag("Line"));
         reflexButtons = new List<ReflexButton>();
@@ -78,12 +76,6 @@ public class GameManager : MonoBehaviour
             if (reflexPhase)
                 finishReflexPhase();
         }
-    }
-    private IEnumerator enableWarPhaseFor(float secs)
-    {
-        this.warPhase = true;
-        yield return new WaitForSeconds(secs);
-        this.warPhase = false;
     }
 
     public void setReferenceButtons()

@@ -15,9 +15,13 @@ public class SimpleController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetKeyDown(KeyCode.W))
         {
             animator.Play("Attack3");
+        }
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            animator.Play("idle2");
         }
     }
 }
