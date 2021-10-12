@@ -13,7 +13,6 @@ public class ReflexButton
         this.buttonGo = buttonGo;
         buttonGo.SetActive(false);
         this.lineSprite = lineSprite;
-        Debug.Log(this.buttonGo.name + "   " + this.lineSprite.name);
     }
     public void activate()
     {
@@ -42,7 +41,7 @@ public class ReflexButton
     }
     public void drawLine()
     {
-        var wpos = new Vector3().fromVec2(Input.mousePosition);
+        var wpos = Input.mousePosition;
         wpos.z = fixedZ;
         wpos = GameManager.mainCam.ScreenToWorldPoint(wpos);
 
@@ -51,7 +50,7 @@ public class ReflexButton
         var lineSprite = this.lineSprite;
 
         float distance = Vector3.Distance(buttonShouldBeHit.transform.position, wpos);
-        lineSprite.transform.localScale = new Vector3(distance * GameManager.SCREEN_FACTOR, 0.3f, 1);
+        lineSprite.transform.localScale = new Vector3(distance * InputHandler.SCREEN_FACTOR, 0.3f, 1);
 
         var midPt = (buttonShouldBeHit.transform.position + wpos) / 2;
         lineSprite.transform.position = midPt;
@@ -71,7 +70,7 @@ public class ReflexButton
         var lineSprite = this.lineSprite;
 
         float distance = Vector3.Distance(buttonShouldBeHit.transform.position, wpos);
-        lineSprite.transform.localScale = new Vector3(distance * GameManager.SCREEN_FACTOR, 0.3f, 1);
+        lineSprite.transform.localScale = new Vector3(distance * InputHandler.SCREEN_FACTOR, 0.3f, 1);
 
         var midPt = (buttonShouldBeHit.transform.position + wpos) / 2;
         lineSprite.transform.position = midPt;
@@ -80,7 +79,7 @@ public class ReflexButton
         var angle = Vector3.Angle(new Vector2(1, 0), mpos - screenPtButton);
         if (screenPtButton.y > mpos.y)
             angle = -angle;
-        Debug.Log(angle);
+        
         lineSprite.transform.localRotation = Quaternion.Euler(0, 0, angle);
     }
 }

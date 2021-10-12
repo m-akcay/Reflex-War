@@ -4,106 +4,88 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    private float fixedZ = 1.5f;
-    [SerializeField]
-    private List<GameObject> referenceButtons;
+    private const float fixedZ = 1.5f;
     [SerializeField]
     public static Camera mainCam;
-    public int difficulty { get; set; }
     [SerializeField, Range(4, 10)]
     private int numOfActiveButtons;
+    private int difficulty;
+    [SerializeField]
+    private List<GameObject> referenceButtons;
     private List<Color> COLORS;
     private List<int> chosenColorIndices;
     private List<Vector3> BUTTON_POSITIONS;
+    public List<ReflexButton> reflexButtons { get; private set; }
+    public bool reflexPhase { get; private set; }
+    public bool warPhase { get; private set; }
+    private float phaseStartTime;
+    public float reactionTime 
+    { 
+        get
+        {
+            return Time.realtimeSinceStartup - phaseStartTime;
+        }
+    }
 
-    private bool reflexPhase = false;
-    private bool drawing = false;
-    private int buttonShouldBeHitIdx = 0;
-    [SerializeField]
-    private LayerMask mask;
-
-    private List<ReflexButton> reflexButtons;
-    // max scaleX is 23 (full width)
-    // max world distance is 3 (-1.5 to 1.5)
-    // for line sprites
-    public const float SCREEN_FACTOR = 23 / 3.1f;
-    void Start()
+    private void Start()
     {
         mainCam = Camera.main;
+        difficulty = 1;
+        reflexPhase = false;
+        warPhase = false;
         var buttons = new List<GameObject>(GameObject.FindGameObjectsWithTag("Button"));
         var lines = new List<GameObject>(GameObject.FindGameObjectsWithTag("Line"));
-        referenceButtons = new List<GameObject>(GameObject.FindGameObjectsWithTag("ReferenceButton"));
         reflexButtons = new List<ReflexButton>();
         for (int i = 0; i < buttons.Count; i++)
         {
             reflexButtons.Add(new ReflexButton(buttons[i], lines[i]));
         }
-
-        foreach (var button in referenceButtons)
-        {
-            button.SetActive(false);
-        }
-
         createPositionArray();
         createColorArray();
-    }
 
-    void Update()
+        StartCoroutine(enableReflexPhase(numOfActiveButtons * 1.5f));
+    }
+    private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            setReferenceButtons();
-            setButtons();
-            reflexPhase = true;
-        }
+        //if (Input.GetKeyDown(KeyCode.K))
+        //    startReflexPhase();
 
-        if (reflexPhase)
-        {
-            if (Input.GetMouseButton(0))
-            {
-                Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-                RaycastHit outHit;
-                bool hit = Physics.Raycast(ray, out outHit, 3, mask);
-                var buttonShouldBeHit = reflexButtons[buttonShouldBeHitIdx].buttonGo;
-                if (hit && outHit.collider.gameObject == buttonShouldBeHit)
-                {
-                    Debug.Log(outHit.collider.gameObject.name);
-                    drawing = true;
-                    if (buttonShouldBeHitIdx > 0)
-                    {
-                        Debug.Log(buttonShouldBeHitIdx);
-                        var finalPos = buttonShouldBeHit.transform.position;
-                        reflexButtons[buttonShouldBeHitIdx - 1].finalizeLine(finalPos);
-                        if (buttonShouldBeHitIdx == numOfActiveButtons - 1)
-                        {
-                            finishReflexPhase();
-                            return;
-                        }
-                    }
-                    buttonShouldBeHitIdx++;
-                }
-
-                if (drawing)
-                {
-                    reflexButtons[buttonShouldBeHitIdx - 1].drawLine();
-                }
-            }
-            else if (drawing && Input.GetMouseButtonUp(0))
-            {
-                drawing = false;
-                buttonShouldBeHitIdx--;
-                reflexButtons[buttonShouldBeHitIdx].hideLine();
-            }
-        }
-        
     }
-    private void finishReflexPhase()
+    public void startReflexPhase()
+    {
+        setReferenceButtons();
+        setButtons();
+        this.reflexPhase = true;
+    }
+    public void finishReflexPhase()
     {
         this.reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
-        buttonShouldBeHitIdx = 0;
     }
+    public bool isFinalButton(int buttonIdx)
+    {
+        return buttonIdx == numOfActiveButtons - 1;
+    }
+    private IEnumerator enableReflexPhase(float secs)
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(secs);
+            startReflexPhase();
+            phaseStartTime = Time.realtimeSinceStartup;
+            yield return new WaitForSeconds(secs);
+            if (reflexPhase)
+                finishReflexPhase();
+        }
+    }
+    private IEnumerator enableWarPhaseFor(float secs)
+    {
+        this.warPhase = true;
+        yield return new WaitForSeconds(secs);
+        this.warPhase = false;
+    }
+
     public void setReferenceButtons()
     {
         float buttonSpacing = Screen.width * 0.09f;
@@ -120,7 +102,7 @@ public class GameManager : MonoBehaviour
             referenceButton.transform.position = mainCam.ScreenToWorldPoint(screenPos);
             referenceButton.GetComponent<SpriteRenderer>().color = COLORS[chosenColorIndices[i]];
         }
-       
+
     }
     public void setButtons()
     {
@@ -150,7 +132,7 @@ public class GameManager : MonoBehaviour
     {
         COLORS = new List<Color>();
 
-        // minimum difference between colors is set to be 0.2f
+        // minimum difference between colors is set to be 0.3f
         for (int i = 0; i < 4; i++)
         {
             float r = i / 3.0f;
@@ -200,5 +182,4 @@ public class GameManager : MonoBehaviour
             }
         }
     }
-
 }

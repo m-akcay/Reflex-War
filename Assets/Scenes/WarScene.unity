@@ -2496,6 +2496,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1252468512}
+  - component: {fileID: 1252468513}
   - component: {fileID: 1252468511}
   m_Layer: 0
   m_Name: GameManagerObject
@@ -2516,17 +2517,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: afd6492cafbeaf14bb0869058250c43e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttons:
-  - {fileID: 2061210507}
-  - {fileID: 1677440441}
-  - {fileID: 2064605839}
-  - {fileID: 1809109698}
-  - {fileID: 1192397584}
-  - {fileID: 783755302}
-  - {fileID: 496036717}
-  - {fileID: 433851872}
-  - {fileID: 1014698952}
-  - {fileID: 348288115}
+  numOfActiveButtons: 5
   referenceButtons:
   - {fileID: 976633799}
   - {fileID: 760513216}
@@ -2538,24 +2529,6 @@ MonoBehaviour:
   - {fileID: 1824667953}
   - {fileID: 335434286}
   - {fileID: 1263228495}
-  numOfActiveButtons: 4
-  BUTTON_POSITIONS: []
-  mask:
-    serializedVersion: 2
-    m_Bits: 1024
-  lineSprites:
-  - {fileID: 263082797}
-  - {fileID: 1839943027}
-  - {fileID: 917104239}
-  - {fileID: 1100299925}
-  - {fileID: 1385346108}
-  - {fileID: 387985893}
-  - {fileID: 298613723}
-  - {fileID: 1358488049}
-  - {fileID: 2079720833}
-  - {fileID: 1784857657}
-  prevButton: {fileID: 0}
-  button: {fileID: 0}
 --- !u!4 &1252468512
 Transform:
   m_ObjectHideFlags: 0
@@ -2570,6 +2543,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1252468513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1252468510}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 37078eb98425de542a4995abee36f71d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gm: {fileID: 1252468511}
+  mainCam: {fileID: 1088603295}
+  mask:
+    serializedVersion: 2
+    m_Bits: 1024
 --- !u!1 &1257492200
 GameObject:
   m_ObjectHideFlags: 0
