@@ -10,7 +10,7 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private List<GameObject> referenceButtons;
     [SerializeField]
-    private Camera mainCam;
+    public static Camera mainCam;
     public int difficulty { get; set; }
     [SerializeField, Range(4, 10)]
     private int numOfActiveButtons;
@@ -27,15 +27,22 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     private GameObject[] lineSprites;
 
+    private List<ReflexButton> reflexButtons;
     // max scaleX is 23 (full width)
     // max world distance is 3 (-1.5 to 1.5)
     // for line sprites
-    private const float SCREEN_FACTOR = 23 / 3.1f;
+    public const float SCREEN_FACTOR = 23 / 3.1f;
     void Start()
     {
-        foreach (var button in buttons)
+        mainCam = Camera.main;
+        buttons = new List<GameObject>(GameObject.FindGameObjectsWithTag("Button"));
+        var lines = new List<GameObject>(GameObject.FindGameObjectsWithTag("Line"));
+        referenceButtons = new List<GameObject>(GameObject.FindGameObjectsWithTag("ReferenceButton"));
+        reflexButtons = new List<ReflexButton>();
+        for (int i = 0; i < buttons.Count; i++)
         {
-            button.SetActive(false);
+            buttons[i].SetActive(false);
+            reflexButtons.Add(new ReflexButton(buttons[i], lines[i]));
         }
 
         foreach (var button in referenceButtons)
@@ -45,7 +52,6 @@ public class GameManager : MonoBehaviour
 
         createPositionArray();
         createColorArray();
-
     }
 
     void Update()
@@ -59,10 +65,8 @@ public class GameManager : MonoBehaviour
 
         if (reflexPhase)
         {
-            
             if (Input.GetMouseButton(0))
             {
-                //var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
                 Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
                 RaycastHit outHit;
                 bool hit = Physics.Raycast(ray, out outHit, 3, mask);
@@ -74,22 +78,23 @@ public class GameManager : MonoBehaviour
                     if (buttonShouldBeHitIdx > 0)
                     {
                         Debug.Log(buttonShouldBeHitIdx);
-                        finalizeLineSprite();
+                        var finalPos = reflexButtons[buttonShouldBeHitIdx].buttonGo.transform.position;
+                        reflexButtons[buttonShouldBeHitIdx - 1].finalizeLine(finalPos);
                     }
+                    reflexButtons[buttonShouldBeHitIdx].setLineColor(COLORS[chosenColorIndices[buttonShouldBeHitIdx]]);
                     buttonShouldBeHitIdx++;
                 }
 
                 if (drawing)
                 {
-                    setLineSprite();
+                    reflexButtons[buttonShouldBeHitIdx - 1].drawLine();
                 }
             }
             else if (drawing && Input.GetMouseButtonUp(0))
             {
                 drawing = false;
-                //var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
-                //lineRenderer.positionCount--;
                 buttonShouldBeHitIdx--;
+                reflexButtons[buttonShouldBeHitIdx].hideLine();
             }
         }
         
@@ -114,7 +119,7 @@ public class GameManager : MonoBehaviour
         var angle = Vector3.Angle(new Vector2(1, 0), Input.mousePosition - screenPtButton);
         if (screenPtButton.y > Input.mousePosition.y)
             angle = -angle;
-        Debug.Log(angle);
+
         lineSprite.transform.localRotation = Quaternion.Euler(0, 0, angle);
     }
 
