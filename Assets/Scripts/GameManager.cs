@@ -11,7 +11,6 @@ public class GameManager : MonoBehaviour
     private List<GameObject> referenceButtons;
     [SerializeField]
     private Camera mainCam;
-    private float screenWidth;
     public int difficulty { get; set; }
     [SerializeField, Range(4, 10)]
     private int numOfActiveButtons;
@@ -25,6 +24,13 @@ public class GameManager : MonoBehaviour
     private int buttonShouldBeHitIdx = 0;
     [SerializeField]
     private LayerMask mask;
+    [SerializeField]
+    private GameObject[] lineSprites;
+
+    // max scaleX is 23 (full width)
+    // max world distance is 3 (-1.5 to 1.5)
+    // for line sprites
+    private const float SCREEN_FACTOR = 23 / 3.1f;
     void Start()
     {
         foreach (var button in buttons)
@@ -53,11 +59,10 @@ public class GameManager : MonoBehaviour
 
         if (reflexPhase)
         {
-            if (!mainCam.orthographic)
-                mainCam.orthographic = true;
+            
             if (Input.GetMouseButton(0))
             {
-                var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
+                //var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
                 Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
                 RaycastHit outHit;
                 bool hit = Physics.Raycast(ray, out outHit, 3, mask);
@@ -66,37 +71,79 @@ public class GameManager : MonoBehaviour
                 {
                     Debug.Log(outHit.collider.gameObject.name);
                     drawing = true;
-                    if (!lineRenderer.enabled)
+                    if (buttonShouldBeHitIdx > 0)
                     {
-                        lineRenderer.enabled = true;
-                        lineRenderer.positionCount = 2;
+                        Debug.Log(buttonShouldBeHitIdx);
+                        finalizeLineSprite();
                     }
-                    else
-                        lineRenderer.positionCount++;
-
-                    lineRenderer.SetPosition(buttonShouldBeHitIdx, buttonShouldBeHit.transform.position);
                     buttonShouldBeHitIdx++;
                 }
 
                 if (drawing)
                 {
-                    var wpos = new Vector3().fromVec2(Input.mousePosition);
-                    wpos.z = fixedZ;
-                    wpos = mainCam.ScreenToWorldPoint(wpos);
-                    lineRenderer.SetPosition(lineRenderer.positionCount - 1, wpos);
+                    setLineSprite();
                 }
-
             }
             else if (drawing && Input.GetMouseButtonUp(0))
             {
                 drawing = false;
-                var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
-                lineRenderer.positionCount--;
+                //var lineRenderer = mainCam.gameObject.GetComponent<LineRenderer>();
+                //lineRenderer.positionCount--;
                 buttonShouldBeHitIdx--;
             }
         }
         
     }
+    private void setLineSprite()
+    {
+        var wpos = new Vector3().fromVec2(Input.mousePosition);
+        wpos.z = fixedZ;
+        wpos = mainCam.ScreenToWorldPoint(wpos);
+
+        var activeIdx = buttonShouldBeHitIdx - 1;
+        var buttonShouldBeHit = buttons[activeIdx];
+        var lineSprite = lineSprites[activeIdx];
+
+        float distance = Vector3.Distance(buttonShouldBeHit.transform.position, wpos);
+        lineSprite.transform.localScale = new Vector3(distance * SCREEN_FACTOR, 0.3f, 1);
+
+        var midPt = (buttonShouldBeHit.transform.position + wpos) / 2;
+        lineSprite.transform.position = midPt;
+
+        var screenPtButton = mainCam.WorldToScreenPoint(buttonShouldBeHit.transform.position);
+        var angle = Vector3.Angle(new Vector2(1, 0), Input.mousePosition - screenPtButton);
+        if (screenPtButton.y > Input.mousePosition.y)
+            angle = -angle;
+        Debug.Log(angle);
+        lineSprite.transform.localRotation = Quaternion.Euler(0, 0, angle);
+    }
+
+    [SerializeField]
+    private GameObject prevButton;
+    [SerializeField]
+    private GameObject button;
+    private void finalizeLineSprite()
+    {
+        var wpos = buttons[buttonShouldBeHitIdx].transform.position;
+        var mpos = mainCam.WorldToScreenPoint(wpos);
+        var activeIdx = buttonShouldBeHitIdx - 1;
+        var buttonShouldBeHit = buttons[activeIdx];
+        var lineSprite = lineSprites[activeIdx];
+
+        float distance = Vector3.Distance(buttonShouldBeHit.transform.position, wpos);
+        lineSprite.transform.localScale = new Vector3(distance * SCREEN_FACTOR, 0.3f, 1);
+
+        var midPt = (buttonShouldBeHit.transform.position + wpos) / 2;
+        lineSprite.transform.position = midPt;
+
+        var screenPtButton = mainCam.WorldToScreenPoint(buttonShouldBeHit.transform.position);
+        var angle = Vector3.Angle(new Vector2(1, 0), mpos - screenPtButton);
+        if (screenPtButton.y > mpos.y)
+            angle = -angle;
+        Debug.Log(angle);
+        lineSprite.transform.localRotation = Quaternion.Euler(0, 0, angle);
+    }
+
     public void setReferenceButtons()
     {
         float buttonSpacing = Screen.width * 0.09f;
