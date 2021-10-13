@@ -15,6 +15,9 @@ public class GameManager : MonoBehaviour
     private List<Color> COLORS;
     private List<int> chosenColorIndices;
     private List<Vector3> BUTTON_POSITIONS;
+    
+    [SerializeField]
+    private bool spawnAvailable;
     public List<ReflexButton> reflexButtons { get; private set; }
     public bool reflexPhase { get; private set; }
     private float phaseStartTime;
@@ -47,7 +50,6 @@ public class GameManager : MonoBehaviour
     {
         //if (Input.GetKeyDown(KeyCode.K))
         //    startReflexPhase();
-
     }
     public void startReflexPhase()
     {
@@ -57,6 +59,7 @@ public class GameManager : MonoBehaviour
     }
     public void finishReflexPhase()
     {
+        Debug.Log("finish called");
         this.reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
@@ -69,7 +72,9 @@ public class GameManager : MonoBehaviour
     {
         while (true)
         {
+            spawnAvailable = true;
             yield return new WaitForSeconds(secs);
+            spawnAvailable = false;
             startReflexPhase();
             phaseStartTime = Time.realtimeSinceStartup;
             yield return new WaitForSeconds(secs);
