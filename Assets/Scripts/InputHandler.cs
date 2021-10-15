@@ -19,13 +19,24 @@ public class InputHandler : MonoBehaviour
         }
     }
     [SerializeField]
+    private Color purple;
+    [SerializeField]
+    private Color green;
+    [SerializeField]
+    private Color white;
+    [SerializeField]
+    private Color red;
+
+    [SerializeField]
     private GameManager gm;
     [SerializeField]
     private Camera mainCam;
     private bool drawing = false;
+    [SerializeField]
     private int nextButtonIdx = 0;
     [SerializeField]
     private GameObject spawnIndicator;
+    private Material spawnMaterial;
     [SerializeField]
     private LayerMask mask;
     [SerializeField]
@@ -47,6 +58,7 @@ public class InputHandler : MonoBehaviour
     void Start()
     {
         SPAWN_LIMITS = new SpawnLimits(8.35f, -8.35f, -5.7f, -8.75f);
+        spawnMaterial = spawnIndicator.GetComponent<Renderer>().material; 
     }
 
     void Update()
@@ -90,16 +102,42 @@ public class InputHandler : MonoBehaviour
         }
         else
         {
-            if (Input.GetMouseButton(0))
+            resetVariables();
+            if (gm.spawnAvailable)
             {
                 RaycastHit outHit;
                 Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
                 bool hit = Physics.Raycast(ray, out outHit, 20, groundMask);
+                bool l_spawnPositionAvailable = false;
                 if (hit)
                 {
                     var rawPos = outHit.point + new Vector3(0, 2.3f, 0);
                     spawnIndicator.transform.position = clampToSpawnZone(rawPos, SPAWN_LIMITS);
+                    var spawnRenderer = spawnIndicator.GetComponent<Renderer>();
+                    if (!spawnRenderer.enabled)
+                        spawnRenderer.enabled = true;
+                    l_spawnPositionAvailable = spawnPositionAvailable(spawnIndicator.transform.position);
+                    if (l_spawnPositionAvailable)
+                    {
+                        spawnMaterial.SetColor("Color_D03AD5CF", white);
+                    }
+                    else
+                    {
+                        spawnMaterial.SetColor("Color_D03AD5CF", red);
+                    }
                 }
+
+                if (Input.GetMouseButtonDown(0) && l_spawnPositionAvailable)
+                {
+                    var prefab = Resources.Load("Prefabs/Shooter") as GameObject;
+                    var troop = Instantiate(prefab, spawnIndicator.transform.position, Quaternion.identity);
+                    gm.spawnAvailable = false;
+                    gm.activeTroops.Add(troop);
+                }
+            }
+            else
+            {
+                spawnIndicator.GetComponent<Renderer>().enabled = false;
             }
         }
     }
@@ -114,11 +152,24 @@ public class InputHandler : MonoBehaviour
     private void finishReflexPhase()
     {
         gm.finishReflexPhase();
-        localFinishReflexPhase();
+        resetVariables();
     }
-    private void localFinishReflexPhase()
+    private void resetVariables()
     {
         this.drawing = false;
         nextButtonIdx = 0;
+    }
+    private bool spawnPositionAvailable(Vector3 pos)
+    {
+        foreach (var troop in gm.activeTroops)
+        {
+            if (Vector2.Distance(troop.transform.position.xz(), pos.xz()) < 1.6f)
+                return false;
+        }
+        return true;
+    }
+    private void OnDestroy()
+    {
+        Destroy(spawnMaterial);
     }
 }

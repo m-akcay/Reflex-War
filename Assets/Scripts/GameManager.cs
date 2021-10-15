@@ -15,9 +15,11 @@ public class GameManager : MonoBehaviour
     private List<Color> COLORS;
     private List<int> chosenColorIndices;
     private List<Vector3> BUTTON_POSITIONS;
-    
     [SerializeField]
-    private bool spawnAvailable;
+    private GameObject blurredPanel;
+
+    [SerializeField]
+    public bool spawnAvailable;
     public List<ReflexButton> reflexButtons { get; private set; }
     public bool reflexPhase { get; private set; }
     private float phaseStartTime;
@@ -28,9 +30,11 @@ public class GameManager : MonoBehaviour
             return Time.realtimeSinceStartup - phaseStartTime;
         }
     }
+    public List<GameObject> activeTroops;
 
     private void Start()
     {
+        activeTroops = new List<GameObject>(GameObject.FindGameObjectsWithTag("Troop"));
         mainCam = Camera.main;
         difficulty = 1;
         reflexPhase = false;
@@ -45,22 +49,23 @@ public class GameManager : MonoBehaviour
         createColorArray();
 
         StartCoroutine(enableReflexPhase(numOfActiveButtons * 1.5f));
+        //StartCoroutine(enableReflexPhase(3));
     }
     private void Update()
     {
-        //if (Input.GetKeyDown(KeyCode.K))
-        //    startReflexPhase();
     }
     public void startReflexPhase()
     {
+        //blurredPanel.SetActive(true);
         setReferenceButtons();
         setButtons();
         this.reflexPhase = true;
     }
     public void finishReflexPhase()
     {
-        Debug.Log("finish called");
+        //blurredPanel.SetActive(false);
         this.reflexPhase = false;
+        this.spawnAvailable = true;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
     }
@@ -130,15 +135,15 @@ public class GameManager : MonoBehaviour
         COLORS = new List<Color>();
 
         // minimum difference between colors is set to be 0.3f
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 3; i++)
         {
-            float r = i / 3.0f;
-            for (int j = 0; j < 4; j++)
+            float r = i / 2.0f;
+            for (int j = 0; j < 3; j++)
             {
-                float g = j / 3.0f;
-                for (int k = 0; k < 4; k++)
+                float g = j / 2.0f;
+                for (int k = 0; k < 3; k++)
                 {
-                    float b = k / 3.0f;
+                    float b = k / 2.0f;
                     this.COLORS.Add(new Color(r, g, b));
                 }
             }

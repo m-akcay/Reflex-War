@@ -8,6 +8,8 @@ TagManager:
   - Button
   - ReferenceButton
   - Line
+  - Troop
+  - Tower
   layers:
   - Default
   - TransparentFX
@@ -19,7 +21,7 @@ TagManager:
   - 
   - Ground
   - ButtonLayer
-  - Spawnable
+  - 
   - 
   - 
   - 

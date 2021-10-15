@@ -26,6 +26,10 @@ public static class Vector3Extensions
     {
         return new Vector2(v.x, v.y);
     }
+    public static Vector3 xz(this Vector3 v)
+    {
+        return new Vector2(v.x, v.z);
+    }
 
     public static Vector3 flippedXY(this Vector3 v)
     {
