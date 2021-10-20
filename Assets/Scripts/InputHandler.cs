@@ -43,6 +43,11 @@ public class InputHandler : MonoBehaviour
     private LayerMask groundMask;
 
     private SpawnLimits SPAWN_LIMITS;
+    private float reactionMultiplier;
+    private bool spawnIndicatorIsRed;
+    [SerializeField]
+    private Color spawnColor;
+    private Vector3 lastAvailableSpawnPos;
 
     // max scaleX is 23 (full width)
     // max world distance is 3 (-1.5 to 1.5)
@@ -58,7 +63,11 @@ public class InputHandler : MonoBehaviour
     void Start()
     {
         SPAWN_LIMITS = new SpawnLimits(8.35f, -8.35f, -5.7f, -8.75f);
-        spawnMaterial = spawnIndicator.GetComponent<Renderer>().material; 
+        spawnMaterial = spawnIndicator.GetComponent<Renderer>().material;
+        reactionMultiplier = 1f;
+        spawnIndicatorIsRed = true;
+        spawnColor = white;
+        lastAvailableSpawnPos = new Vector3();
     }
 
     void Update()
@@ -81,7 +90,10 @@ public class InputHandler : MonoBehaviour
                         if (gm.isFinalButton(nextButtonIdx))
                         {
                             finishReflexPhase();
-                            Debug.Log("reaction time -> " + gm.reactionTime);
+                            gm.spawnAvailable = true;
+                            setReactionMultiplier();
+                            spawnMaterial.SetColor("Color_D03AD5CF", spawnColor);
+                            Debug.Log("reaction time -> " + this.reactionMultiplier);
                             return;
                         }
                     }
@@ -105,34 +117,20 @@ public class InputHandler : MonoBehaviour
             resetVariables();
             if (gm.spawnAvailable)
             {
-                RaycastHit outHit;
-                Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-                bool hit = Physics.Raycast(ray, out outHit, 20, groundMask);
-                bool l_spawnPositionAvailable = false;
-                if (hit)
-                {
-                    var rawPos = outHit.point + new Vector3(0, 2.3f, 0);
-                    spawnIndicator.transform.position = clampToSpawnZone(rawPos, SPAWN_LIMITS);
-                    var spawnRenderer = spawnIndicator.GetComponent<Renderer>();
-                    if (!spawnRenderer.enabled)
-                        spawnRenderer.enabled = true;
-                    l_spawnPositionAvailable = spawnPositionAvailable(spawnIndicator.transform.position);
-                    if (l_spawnPositionAvailable)
-                    {
-                        spawnMaterial.SetColor("Color_D03AD5CF", white);
-                    }
-                    else
-                    {
-                        spawnMaterial.SetColor("Color_D03AD5CF", red);
-                    }
-                }
+                Vector3 spawnPos;
+                bool l_spawnPositionAvailable = spawnPositionAvailable(Input.mousePosition, out spawnPos);
+                setUpSpawner(l_spawnPositionAvailable, spawnPos);
 
-                if (Input.GetMouseButtonDown(0) && l_spawnPositionAvailable)
+                if (l_spawnPositionAvailable)
                 {
-                    var prefab = Resources.Load("Prefabs/Shooter") as GameObject;
-                    var troop = Instantiate(prefab, spawnIndicator.transform.position, Quaternion.identity);
-                    gm.spawnAvailable = false;
-                    gm.activeTroops.Add(troop);
+                    if (Input.GetMouseButtonDown(0))
+                    {
+                        var prefab = Resources.Load("Prefabs/Shooter") as GameObject;
+                        var troop = Instantiate(prefab, spawnIndicator.transform.position, Quaternion.identity);
+                        troop.GetComponent<Archer>().init(this.reactionMultiplier);
+                        gm.spawnAvailable = false;
+                        gm.activeTroops.Add(troop);
+                    }
                 }
             }
             else
@@ -140,6 +138,78 @@ public class InputHandler : MonoBehaviour
                 spawnIndicator.GetComponent<Renderer>().enabled = false;
             }
         }
+    }
+
+    private bool spawnPositionAvailable(Vector3 mousePos, out Vector3 pos)
+    {
+        RaycastHit outHit;
+        Ray ray = mainCam.ScreenPointToRay(mousePos);
+        bool hit = Physics.Raycast(ray, out outHit, 200, groundMask);
+        bool l_spawnPositionAvailable = false;
+        pos = lastAvailableSpawnPos;
+
+        if (hit)
+        {
+            var rawPos = outHit.point + new Vector3(0, 2.3f, 0);
+            pos = clampToSpawnZone(rawPos, SPAWN_LIMITS);
+
+            l_spawnPositionAvailable = posOccupied(spawnIndicator.transform.position);
+        }
+
+        lastAvailableSpawnPos = pos;
+
+        return l_spawnPositionAvailable;
+    }
+    private bool posOccupied(Vector3 pos)
+    {
+        foreach (var troop in gm.activeTroops)
+        {
+            if (Vector2.Distance(troop.transform.position.xz(), pos.xz()) < 2f)
+                return false;
+        }
+        return true;
+    }
+    private void setUpSpawner(bool isAvailable, Vector3 spawnPos)
+    {
+        var spawnRenderer = spawnIndicator.GetComponent<Renderer>();
+        if (!spawnRenderer.enabled)
+            spawnRenderer.enabled = true;
+        spawnIndicator.transform.position = spawnPos;
+
+        if (isAvailable)
+        {
+
+            if (spawnIndicatorIsRed)
+            {
+                spawnMaterial.SetColor("Color_D03AD5CF", spawnColor);
+                spawnIndicatorIsRed = false;
+            }
+        }
+        else
+        {
+            spawnIndicatorIsRed = true;
+            spawnMaterial.SetColor("Color_D03AD5CF", red);
+        }
+    }
+    private void setReactionMultiplier()
+    {
+        this.reactionMultiplier = gm.reactionMultiplier;
+        GameManager.SPAWN_COLOR_MAP.TryGetValue(reactionMultiplier, out spawnColor);
+        //switch (this.reactionMultiplier)
+        //{
+        //    case 1f:
+        //        spawnColor = white;
+        //        break;
+        //    case 1.25f:
+        //        spawnColor = green;
+        //        break;
+        //    case 1.5f:
+        //        spawnColor = purple;
+        //        break;
+        //    default:
+        //        spawnColor = white;
+        //        break;
+        //}
     }
     private Vector3 clampToSpawnZone(Vector3 pos, SpawnLimits limits)
     {
@@ -158,15 +228,6 @@ public class InputHandler : MonoBehaviour
     {
         this.drawing = false;
         nextButtonIdx = 0;
-    }
-    private bool spawnPositionAvailable(Vector3 pos)
-    {
-        foreach (var troop in gm.activeTroops)
-        {
-            if (Vector2.Distance(troop.transform.position.xz(), pos.xz()) < 1.6f)
-                return false;
-        }
-        return true;
     }
     private void OnDestroy()
     {

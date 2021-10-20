@@ -4,12 +4,15 @@ using UnityEngine;
 
 public class Archer : MonoBehaviour
 {
+    private const float BASE_FIRE_RATE = 1.5f;
     private const float BASE_DAMAGE = 30;
-    private const float BASE_SPEED = 0.1f;
-    private const float RANGE = 7.5f;
+    private const float BASE_SPEED = 0.2f;
+    private const float BASE_RANGE = 5f;
     private float damage;
     [SerializeField]
     private float speed;
+    [SerializeField]
+    private float range;
     [SerializeField]
     private Transform target;
     [SerializeField]
@@ -22,6 +25,9 @@ public class Archer : MonoBehaviour
     private Rigidbody rb;
     [SerializeField]
     private GameObject bullet;
+    private Material mat;
+    private Material bulletMat;
+
     private bool rotating = false;
     private bool rotateCCW = false;
 
@@ -37,10 +43,18 @@ public class Archer : MonoBehaviour
         }
     }
 
+    // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
     public void init(float reactionMultiplier)
     {
         this.damage = BASE_DAMAGE * reactionMultiplier;
         this.speed = BASE_SPEED * reactionMultiplier;
+        range = BASE_RANGE * reactionMultiplier;
+
+        Color color;
+        GameManager.SPAWN_COLOR_MAP.TryGetValue(reactionMultiplier, out color);
+        bullet.GetComponent<Bullet>().init(damage, 
+                                        BASE_FIRE_RATE / reactionMultiplier, 
+                                        color);
     }
 
     private void FixedUpdate()
@@ -48,7 +62,7 @@ public class Archer : MonoBehaviour
         Vector3 posDiff = (target.position - transform.position);
         Vector3 moveDirection = posDiff.normalized;
         distance = posDiff.magnitude;
-        if (distance > RANGE)
+        if (distance > range)
         {
             Vector3 torqueDirection = Vector3.Cross(Vector3.up, moveDirection).normalized;
             foreach (var wheel in wheels)
@@ -79,21 +93,10 @@ public class Archer : MonoBehaviour
         }
         else if (attacking)
         {
-
-        }
-
-        if (Input.GetKeyDown(KeyCode.K))
-        {
-            bullet.SetActive(true);
-            bullet.GetComponent<Bullet>().init(damage);
-            bullet.transform.LookAt(target);
-            bullet.transform.Rotate(90, 0, 0, Space.Self);
-            var forceDir = ((target.transform.position + Vector3.up * 4) - transform.position).normalized;
-            var rb = bullet.GetComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.AddForce(forceDir * 2, ForceMode.Impulse);
+            bullet.GetComponent<Bullet>().fire(target);
         }
     }
+
     private void rotate(bool rotateCCW)
     {
         //transform.Rotate()

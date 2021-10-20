@@ -4,9 +4,19 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    [SerializeField]
+    private Color purple;
+    [SerializeField]
+    private Color green;
+    [SerializeField]
+    private Color white;
+    [SerializeField]
+    private Color red;
     private const float fixedZ = 1.5f;
     [SerializeField]
     public static Camera mainCam;
+    public static Dictionary<float, Color> SPAWN_COLOR_MAP;
+
     [SerializeField, Range(4, 10)]
     private int numOfActiveButtons;
     private int difficulty;
@@ -22,18 +32,29 @@ public class GameManager : MonoBehaviour
     public bool spawnAvailable;
     public List<ReflexButton> reflexButtons { get; private set; }
     public bool reflexPhase { get; private set; }
-    private float phaseStartTime;
-    public float reactionTime 
-    { 
+    public float phaseStartTime { get; private set; }
+    public float reactionMultiplier
+    {
         get
         {
-            return Time.realtimeSinceStartup - phaseStartTime;
+            float reactionTime = Time.realtimeSinceStartup - phaseStartTime;
+            if (reactionTime < numOfActiveButtons)
+                return 1.5f;
+            else if (reactionTime < numOfActiveButtons * 1.5f)
+                return 1.25f;
+            else
+                return 1f;
         }
     }
     public List<GameObject> activeTroops;
 
     private void Start()
     {
+        SPAWN_COLOR_MAP = new Dictionary<float, Color>();
+        SPAWN_COLOR_MAP.Add(1.0f, white);
+        SPAWN_COLOR_MAP.Add(1.25f, green);
+        SPAWN_COLOR_MAP.Add(1.5f, purple);
+
         activeTroops = new List<GameObject>(GameObject.FindGameObjectsWithTag("Troop"));
         mainCam = Camera.main;
         difficulty = 1;
@@ -48,11 +69,8 @@ public class GameManager : MonoBehaviour
         createPositionArray();
         createColorArray();
 
-        StartCoroutine(enableReflexPhase(numOfActiveButtons * 1.5f));
+        StartCoroutine(enableReflexPhase(numOfActiveButtons * 2f));
         //StartCoroutine(enableReflexPhase(3));
-    }
-    private void Update()
-    {
     }
     public void startReflexPhase()
     {
@@ -63,9 +81,7 @@ public class GameManager : MonoBehaviour
     }
     public void finishReflexPhase()
     {
-        //blurredPanel.SetActive(false);
         this.reflexPhase = false;
-        this.spawnAvailable = true;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
     }
@@ -77,7 +93,6 @@ public class GameManager : MonoBehaviour
     {
         while (true)
         {
-            spawnAvailable = true;
             yield return new WaitForSeconds(secs);
             spawnAvailable = false;
             startReflexPhase();

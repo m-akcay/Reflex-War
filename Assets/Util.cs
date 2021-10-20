@@ -13,6 +13,13 @@ public class Util
 
         return new Color(r, g, b);
     }
+    public static Color lerp(Color c0, Color c1, float t)
+    {
+        float r = c0.r * (1 - t) + c1.r * t;
+        float g = c0.g * (1 - t) + c1.g * t;
+        float b = c0.b * (1 - t) + c1.b * t;
+        return new Color(r, g, b);
+    }
     public static Vector3 vectorFromColor(Color c)
     {
         return new Vector3(c.r, c.g, c.b);
