@@ -109,7 +109,7 @@ GameObject:
   - component: {fileID: 5548881727829123613}
   - component: {fileID: 8418619801345964307}
   - component: {fileID: 2507169803303814083}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: RR_wheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -207,7 +207,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!145 &2507169803303814083
 SpringJoint:
   m_ObjectHideFlags: 0
@@ -337,7 +337,7 @@ GameObject:
   - component: {fileID: 5655837570195727914}
   - component: {fileID: 5491877481623278624}
   - component: {fileID: 5211329784691802498}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Gun
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -422,7 +422,7 @@ GameObject:
   - component: {fileID: 3992367584776377543}
   - component: {fileID: 5263108965539805242}
   - component: {fileID: 2570538966934731431}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: FR_wheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -520,7 +520,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!145 &2570538966934731431
 SpringJoint:
   m_ObjectHideFlags: 0
@@ -592,7 +592,7 @@ GameObject:
   - component: {fileID: 7741637450800933665}
   - component: {fileID: 3070293251131866748}
   - component: {fileID: 4877987341719114906}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Shooter
   m_TagString: Troop
   m_Icon: {fileID: 0}
@@ -700,7 +700,6 @@ MonoBehaviour:
   - {fileID: 2924523413346035309}
   - {fileID: 5263108965539805242}
   - {fileID: 8418619801345964307}
-  rb: {fileID: 4877987341719114906}
   bullet: {fileID: 5771984320751135769}
 --- !u!54 &4877987341719114906
 Rigidbody:
@@ -732,7 +731,7 @@ GameObject:
   - component: {fileID: 5940484577243454897}
   - component: {fileID: 2924523413346035309}
   - component: {fileID: 7362858168971843597}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: RL_wheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -830,7 +829,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!145 &7362858168971843597
 SpringJoint:
   m_ObjectHideFlags: 0
@@ -868,7 +867,7 @@ GameObject:
   - component: {fileID: 1215589962065522649}
   - component: {fileID: 2347373369176379834}
   - component: {fileID: 6423657996691648499}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Bullet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -963,7 +962,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e87c4e416efc18479a38d88a08a40b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  shooter: {fileID: 3070293251131866748}
+  target: {fileID: 0}
   timeSinceAvailable: 0
+  fireRate: 0
+  damage: 0
+  forceMultiplier: 0
 --- !u!54 &6423657996691648499
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1218,7 +1222,7 @@ GameObject:
   - component: {fileID: 2203006899287945842}
   - component: {fileID: 6499176943802568955}
   - component: {fileID: 1663275390996162134}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: FL_wheel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1316,7 +1320,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!145 &1663275390996162134
 SpringJoint:
   m_ObjectHideFlags: 0

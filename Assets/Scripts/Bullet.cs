@@ -4,15 +4,25 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
+    [SerializeField]
+    private Shooter shooter;
     private GameObject parentGo;
-    private float damage;
+    private Shooter.TroopColor troopColor;
+    [SerializeField]
+    private Transform target;
     [SerializeField]
     private float timeSinceAvailable = 0;
     private bool _isAvailable;
+    [SerializeField]
     private float fireRate;
-    private Material mat;
-    private Vector3 forceDir;
-    private Rigidbody rb;
+    [SerializeField]
+    private float damage;
+    private Material bulletMat;
+    [SerializeField]
+    private float forceMultiplier;
+    private Rigidbody bulletRb;
+    private bool destroyTimerStarted = false;
+    private float lifeTime;
     private bool isAvailable 
     { 
         get 
@@ -24,20 +34,23 @@ public class Bullet : MonoBehaviour
     {
         _isAvailable = true;
         parentGo = this.transform.parent.gameObject;
-        
     }
-    public void init(float damage, float fireRate, Color color)
+    public void init(float reactionMultiplier, float lifeTime, float forceMultiplier, Transform target, Color color)
     {
-        rb = this.GetComponent<Rigidbody>();
-        mat = this.GetComponent<Renderer>().material;
+        var scaledReactionMultiplier = reactionMultiplier * GameManager.getDifficultyMultiplier();
 
-        this.damage = damage;
-        this.fireRate = fireRate;
-        mat.SetColor("Color_F3BBF886", color);
+        this.troopColor = Shooter.getTroopColor(reactionMultiplier);
+        this.lifeTime = lifeTime;
+        this.forceMultiplier = forceMultiplier;
+        this.damage = Shooter.BASE_DAMAGE * scaledReactionMultiplier;
+        this.target = target;
+        bulletRb = this.GetComponent<Rigidbody>();
+        bulletMat = this.GetComponent<Renderer>().material;
+        this.fireRate = Shooter.BASE_FIRE_RATE / scaledReactionMultiplier;
+        bulletMat.SetColor("Color_F3BBF886", color);
     }
-    public void fire(Transform target)
+    public void fire()
     {
-        //this.transform.parent = this.transform.parent.parent;
         if (!isAvailable)
             return;
 
@@ -47,19 +60,22 @@ public class Bullet : MonoBehaviour
         transform.parent = transform.parent.parent;
         transform.LookAt(targetPosWithVerticalOffset);
         transform.Rotate(90, 0, 0, Space.Self);
-        targetPosWithVerticalOffset += Vector3.up * 3;
-        this.forceDir = (targetPosWithVerticalOffset - transform.position).normalized;
-        rb.isKinematic = false;
-        rb.AddForce(forceDir * 0.75f, ForceMode.Impulse);
+        targetPosWithVerticalOffset += Vector3.up * 2;
+        var forceDir = (targetPosWithVerticalOffset - transform.position).normalized;
+        bulletRb.isKinematic = false;
+        bulletRb.AddForce(forceDir * this.forceMultiplier, ForceMode.Impulse);
+
+        if (!destroyTimerStarted)
+        {
+            startDestroyTimer();
+        }
     }
-    private void FixedUpdate()
-    {
-    }
+   
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.tag == "Tower")
+        if (collision.gameObject.tag == "Tower")
         {
-            collision.gameObject.GetComponent<Tower>().applyDamage(this.damage);
+            collision.gameObject.GetComponent<Tower>().applyDamage(this.damage, this.troopColor);
             this.GetComponent<Rigidbody>().isKinematic = true;
             this.transform.parent = parentGo.transform;
             this.transform.localPosition = Vector3.zero;
@@ -68,5 +84,14 @@ public class Bullet : MonoBehaviour
             timeSinceAvailable = Time.realtimeSinceStartup;
             _isAvailable = true;
         }
+    }
+    private void startDestroyTimer()
+    {
+        destroyTimerStarted = true;
+        Destroy(transform.parent.gameObject, this.lifeTime);
+    }
+    private void OnDestroy()
+    {
+        Destroy(this.bulletMat);
     }
 }

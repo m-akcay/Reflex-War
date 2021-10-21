@@ -24,7 +24,6 @@ public class Util
     {
         return new Vector3(c.r, c.g, c.b);
     }
-
 }
 
 public static class Vector3Extensions

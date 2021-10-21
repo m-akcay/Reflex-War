@@ -6,20 +6,25 @@ public class GameManager : MonoBehaviour
 {
     [SerializeField]
     private Color purple;
+    private static Color PURPLE;
     [SerializeField]
     private Color green;
+    private static Color GREEN;
     [SerializeField]
     private Color white;
+    private static Color WHITE;
     [SerializeField]
     private Color red;
+    private static Color RED;
+
     private const float fixedZ = 1.5f;
     [SerializeField]
     public static Camera mainCam;
-    public static Dictionary<float, Color> SPAWN_COLOR_MAP;
 
     [SerializeField, Range(4, 10)]
     private int numOfActiveButtons;
-    private int difficulty;
+    private static int difficulty = 4;
+
     [SerializeField]
     private List<GameObject> referenceButtons;
     private List<Color> COLORS;
@@ -50,14 +55,11 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        SPAWN_COLOR_MAP = new Dictionary<float, Color>();
-        SPAWN_COLOR_MAP.Add(1.0f, white);
-        SPAWN_COLOR_MAP.Add(1.25f, green);
-        SPAWN_COLOR_MAP.Add(1.5f, purple);
-
+        WHITE = white;
+        GREEN = green;
+        PURPLE = purple;
         activeTroops = new List<GameObject>(GameObject.FindGameObjectsWithTag("Troop"));
         mainCam = Camera.main;
-        difficulty = 1;
         reflexPhase = false;
         var buttons = new List<GameObject>(GameObject.FindGameObjectsWithTag("Button"));
         var lines = new List<GameObject>(GameObject.FindGameObjectsWithTag("Line"));
@@ -69,8 +71,7 @@ public class GameManager : MonoBehaviour
         createPositionArray();
         createColorArray();
 
-        StartCoroutine(enableReflexPhase(numOfActiveButtons * 2f));
-        //StartCoroutine(enableReflexPhase(3));
+        StartCoroutine(enableReflexPhase());
     }
     public void startReflexPhase()
     {
@@ -84,20 +85,25 @@ public class GameManager : MonoBehaviour
         this.reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
+        blurredPanel.SetActive(false);
     }
     public bool isFinalButton(int buttonIdx)
     {
         return buttonIdx == numOfActiveButtons - 1;
     }
-    private IEnumerator enableReflexPhase(float secs)
+    private IEnumerator enableReflexPhase()
     {
         while (true)
         {
-            yield return new WaitForSeconds(secs);
+            if (difficulty < 11)
+                this.numOfActiveButtons = difficulty;
+            float waitTime = this.numOfActiveButtons;
+            yield return new WaitForSeconds(waitTime);
             spawnAvailable = false;
             startReflexPhase();
             phaseStartTime = Time.realtimeSinceStartup;
-            yield return new WaitForSeconds(secs);
+            blurredPanel.SetActive(true);
+            yield return new WaitForSeconds(waitTime * 2);
             if (reflexPhase)
                 finishReflexPhase();
         }
@@ -199,4 +205,33 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    public static void increaseDifficulty()
+    {
+        Debug.Log(difficulty);
+        if (difficulty < 10)
+            difficulty++;
+    }
+    public static int getDifficulty()
+    {
+        return difficulty;
+    }
+    public static float getDifficultyMultiplier()
+    {
+        return 1 + ((difficulty / 10.0f) - 0.4f);
+    }
+    public static Color getReactionColor(float reactionMultiplier)
+    {
+        switch (reactionMultiplier)
+        {
+            case 1f:
+                return WHITE;
+            case 1.25f:
+                return GREEN;
+            case 1.5f:
+                return PURPLE;
+            default:
+                return WHITE;
+        }
+    }
+
 }

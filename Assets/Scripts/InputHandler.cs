@@ -18,6 +18,7 @@ public class InputHandler : MonoBehaviour
             this.down = down;
         }
     }
+
     [SerializeField]
     private Color purple;
     [SerializeField]
@@ -41,6 +42,7 @@ public class InputHandler : MonoBehaviour
     private LayerMask mask;
     [SerializeField]
     private LayerMask groundMask;
+    private Material groundMat;
 
     private SpawnLimits SPAWN_LIMITS;
     private float reactionMultiplier;
@@ -62,12 +64,13 @@ public class InputHandler : MonoBehaviour
     }
     void Start()
     {
-        SPAWN_LIMITS = new SpawnLimits(8.35f, -8.35f, -5.7f, -8.75f);
+        SPAWN_LIMITS = new SpawnLimits(8.35f * 1.5f, -8.35f * 1.5f, -5.7f, -8.75f);
         spawnMaterial = spawnIndicator.GetComponent<Renderer>().material;
         reactionMultiplier = 1f;
         spawnIndicatorIsRed = true;
         spawnColor = white;
         lastAvailableSpawnPos = new Vector3();
+        groundMat = GameObject.Find("Ground").GetComponent<Renderer>().material;
     }
 
     void Update()
@@ -89,11 +92,7 @@ public class InputHandler : MonoBehaviour
                         gm.reflexButtons[nextButtonIdx - 1].finalizeLine(finalPos);
                         if (gm.isFinalButton(nextButtonIdx))
                         {
-                            finishReflexPhase();
-                            gm.spawnAvailable = true;
-                            setReactionMultiplier();
-                            spawnMaterial.SetColor("Color_D03AD5CF", spawnColor);
-                            Debug.Log("reaction time -> " + this.reactionMultiplier);
+                            successfulReflexPhase();
                             return;
                         }
                     }
@@ -125,16 +124,13 @@ public class InputHandler : MonoBehaviour
                 {
                     if (Input.GetMouseButtonDown(0))
                     {
-                        var prefab = Resources.Load("Prefabs/Shooter") as GameObject;
-                        var troop = Instantiate(prefab, spawnIndicator.transform.position, Quaternion.identity);
-                        troop.GetComponent<Archer>().init(this.reactionMultiplier);
-                        gm.spawnAvailable = false;
-                        gm.activeTroops.Add(troop);
+                        spawnTroop();
                     }
                 }
             }
             else
             {
+                groundMat.SetInt("GreenEnabled", 0);
                 spawnIndicator.GetComponent<Renderer>().enabled = false;
             }
         }
@@ -152,22 +148,12 @@ public class InputHandler : MonoBehaviour
         {
             var rawPos = outHit.point + new Vector3(0, 2.3f, 0);
             pos = clampToSpawnZone(rawPos, SPAWN_LIMITS);
-
-            l_spawnPositionAvailable = posOccupied(spawnIndicator.transform.position);
+            l_spawnPositionAvailable = true;
         }
 
         lastAvailableSpawnPos = pos;
 
         return l_spawnPositionAvailable;
-    }
-    private bool posOccupied(Vector3 pos)
-    {
-        foreach (var troop in gm.activeTroops)
-        {
-            if (Vector2.Distance(troop.transform.position.xz(), pos.xz()) < 2f)
-                return false;
-        }
-        return true;
     }
     private void setUpSpawner(bool isAvailable, Vector3 spawnPos)
     {
@@ -194,22 +180,7 @@ public class InputHandler : MonoBehaviour
     private void setReactionMultiplier()
     {
         this.reactionMultiplier = gm.reactionMultiplier;
-        GameManager.SPAWN_COLOR_MAP.TryGetValue(reactionMultiplier, out spawnColor);
-        //switch (this.reactionMultiplier)
-        //{
-        //    case 1f:
-        //        spawnColor = white;
-        //        break;
-        //    case 1.25f:
-        //        spawnColor = green;
-        //        break;
-        //    case 1.5f:
-        //        spawnColor = purple;
-        //        break;
-        //    default:
-        //        spawnColor = white;
-        //        break;
-        //}
+        spawnColor = GameManager.getReactionColor(reactionMultiplier);
     }
     private Vector3 clampToSpawnZone(Vector3 pos, SpawnLimits limits)
     {
@@ -229,8 +200,27 @@ public class InputHandler : MonoBehaviour
         this.drawing = false;
         nextButtonIdx = 0;
     }
+    private void successfulReflexPhase()
+    {
+        finishReflexPhase();
+        gm.spawnAvailable = true;
+        setReactionMultiplier();
+        spawnMaterial.SetColor("Color_D03AD5CF", spawnColor);
+        groundMat.SetInt("Boolean_D1E5A8E9", 1);
+        GameManager.increaseDifficulty();
+    }
+    private void spawnTroop()
+    {
+        var prefab = Resources.Load("Prefabs/Shooter") as GameObject;
+        var troop = Instantiate(prefab, spawnIndicator.transform.position, Quaternion.identity);
+        troop.GetComponent<Shooter>().init(this.reactionMultiplier, GameManager.getDifficulty() * 4);
+        gm.spawnAvailable = false;
+        groundMat.SetInt("Boolean_D1E5A8E9", 0);
+        gm.activeTroops.Add(troop);
+    }
     private void OnDestroy()
     {
         Destroy(spawnMaterial);
+        Destroy(groundMat);
     }
 }
