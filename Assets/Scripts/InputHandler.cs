@@ -64,7 +64,7 @@ public class InputHandler : MonoBehaviour
     }
     void Start()
     {
-        SPAWN_LIMITS = new SpawnLimits(8.35f * 1.5f, -8.35f * 1.5f, -5.7f, -8.75f);
+        SPAWN_LIMITS = new SpawnLimits(8.35f * 1.5f, -8.35f * 1.5f, -12, -14);
         spawnMaterial = spawnIndicator.GetComponent<Renderer>().material;
         reactionMultiplier = 1f;
         spawnIndicatorIsRed = true;
