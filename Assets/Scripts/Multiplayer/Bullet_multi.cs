@@ -10,7 +10,6 @@ public class Bullet_multi : MonoBehaviourPun
     [SerializeField]
     private Shooter_multi shooter;
     private GameObject parentGo;
-    private Shooter.TroopColor troopColor;
     [SerializeField]
     private Transform target;
     [SerializeField]
@@ -35,26 +34,34 @@ public class Bullet_multi : MonoBehaviourPun
     }
     private void Awake()
     {
+        bulletRb = this.GetComponent<Rigidbody>();
+        bulletMat = this.GetComponent<Renderer>().material;
+
         if (!photonView.IsMine)
+        {
             this.gameObject.layer = EnemyBulletLayer;
+            bulletMat.SetColor("Color_F3BBF886", shooter.color);
+            this.target = shooter.target;
+        }
     }
     private void Start()
     {
-        _isAvailable = true;
+        //if (photonView.IsMine)
+        //    _isAvailable = true;
+        //else
+            _isAvailable = true;
         parentGo = this.transform.parent.gameObject;
     }
     public void init(float reactionMultiplier, float lifeTime, float forceMultiplier, Transform target, Color color)
     {
-        var scaledReactionMultiplier = reactionMultiplier * GameManager.getDifficultyMultiplier();
+        var scaledReactionMultiplier = reactionMultiplier * GameManager_multi.getDifficultyMultiplier();
 
-        this.troopColor = Shooter.getTroopColor(reactionMultiplier);
         this.lifeTime = lifeTime;
         this.forceMultiplier = forceMultiplier;
-        this.damage = Shooter.BASE_DAMAGE * scaledReactionMultiplier;
+        this.damage = Shooter_multi.BASE_DAMAGE * scaledReactionMultiplier;
         this.target = target;
-        bulletRb = this.GetComponent<Rigidbody>();
-        bulletMat = this.GetComponent<Renderer>().material;
-        this.fireRate = Shooter.BASE_FIRE_RATE / scaledReactionMultiplier;
+        
+        this.fireRate = Shooter_multi.BASE_FIRE_RATE / scaledReactionMultiplier;
         bulletMat.SetColor("Color_F3BBF886", color);
     }
     public void fire()
@@ -62,8 +69,20 @@ public class Bullet_multi : MonoBehaviourPun
         if (!isAvailable)
             return;
 
+        if (photonView.IsMine)
+            photonView.RPC("shootSignal", RpcTarget.Others);
         _isAvailable = false;
 
+        shoot();
+
+        if (!destroyTimerStarted)
+        {
+            StartCoroutine(startDestroyTimer());
+        }
+    }
+    
+    private void shoot()
+    {
         var targetPosWithVerticalOffset = target.position + Vector3.up;
         transform.parent = transform.parent.parent;
         transform.LookAt(targetPosWithVerticalOffset);
@@ -72,13 +91,20 @@ public class Bullet_multi : MonoBehaviourPun
         var forceDir = (targetPosWithVerticalOffset - transform.position).normalized;
         bulletRb.isKinematic = false;
         bulletRb.AddForce(forceDir * this.forceMultiplier, ForceMode.Impulse);
-
-        if (!destroyTimerStarted)
-        {
-            startDestroyTimer();
-        }
     }
-   
+
+    private void FixedUpdate()
+    {
+        //if (!photonView.IsMine)
+        //{
+        //    if (_isAvailable)
+        //    {
+        //        shoot();
+        //        _isAvailable = false;
+        //    }
+        //}
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Tower")
@@ -90,13 +116,27 @@ public class Bullet_multi : MonoBehaviourPun
             this.transform.localRotation = Quaternion.identity;
             this.transform.localScale = Vector3.one;
             timeSinceAvailable = Time.realtimeSinceStartup;
-            _isAvailable = true;
+            if (photonView.IsMine)
+                _isAvailable = true;
         }
     }
-    private void startDestroyTimer()
+
+    [PunRPC]
+    private void shootSignal()
+    {
+        //_isAvailable = true;
+        shoot();
+        if (!destroyTimerStarted)
+        {
+            StartCoroutine(startDestroyTimer());
+        }
+    }
+    private IEnumerator startDestroyTimer()
     {
         destroyTimerStarted = true;
-        Destroy(transform.parent.gameObject, this.lifeTime);
+        yield return new WaitForSeconds(this.lifeTime);
+        if (photonView.IsMine)
+            PhotonNetwork.Destroy(parentGo.transform.parent.gameObject);
     }
     private void OnDestroy()
     {

@@ -99,5 +99,9 @@ public static class ColorExtensions
     {
         return Vector3.Distance(Util.vectorFromColor(c), Util.vectorFromColor(c2));
     }
+    public static Vector3 toVec3(this Color c)
+    {
+        return new Vector3(c.r, c.g, c.b);
+    }
 }
 

@@ -6,14 +6,7 @@ public class Shooter_multi : MonoBehaviourPun
 {
     private static Color FriendColor = new Color(0.3529412f, 0.7764706f, 1f, 1f);
     private static Color EnemyColor = new Color(1f, 0.5f, 0f, 1f);
-    public enum TroopColor
-    { 
-        WHITE,
-        GREEN,
-        PURPLE
-    }
 
-    private TroopColor troopColor;
     [SerializeField]
     private LayerMask _enemyMask;
     public static LayerMask EnemyMask;
@@ -30,7 +23,7 @@ public class Shooter_multi : MonoBehaviourPun
     [SerializeField]
     private float range;
     [SerializeField]
-    private Transform target;
+    public Transform target { get; private set; }
     [SerializeField]
     private bool attacking;
     [SerializeField]
@@ -40,7 +33,11 @@ public class Shooter_multi : MonoBehaviourPun
     private Rigidbody rb;
     [SerializeField]
     private GameObject bullet;
+
     private Material mat;
+    private Material[] wheelMaterials;
+    private Material gunMat;
+    public Color color { get; private set; }
 
     private bool rotating = false;
     private bool rotateCCW = false;
@@ -59,14 +56,31 @@ public class Shooter_multi : MonoBehaviourPun
         if (photonView.IsMine)
             mat.SetColor("Color_DC628308", FriendColor);
         else
+        {
             mat.SetColor("Color_DC628308", EnemyColor);
+
+            if (TOWERS.Length == 0)
+                setTowers();
+            setTarget();
+
+            wheelMaterials = new Material[4];
+            for (int i = 0; i < wheels.Length; i++)
+            {
+                var wheel = wheels[i];
+                wheel.maxAngularVelocity *= 2;
+                wheelMaterials[i] = wheel.gameObject.GetComponent<Renderer>().material;
+                wheelMaterials[i].SetColor("_BaseColor", EnemyColor);
+
+            }
+
+            var gunObj = transform.Find("Gun");
+            gunMat = gunObj.GetComponent<Renderer>().material;
+            gunMat.SetColor("_BaseColor", EnemyColor);
+        }
     }
     private void Start()
     {
-        foreach (var wheel in wheels)
-        {
-            wheel.maxAngularVelocity *= 2;
-        }
+        
     }
     // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
     public void init(float reactionMultiplier, float lifeTime)
@@ -75,7 +89,6 @@ public class Shooter_multi : MonoBehaviourPun
             setTowers();
         setTarget();
 
-        troopColor = getTroopColor(reactionMultiplier);
         rb = GetComponent<Rigidbody>();
         
         var scaledReactionMultiplier = reactionMultiplier * GameManager_multi.getDifficultyMultiplier();
@@ -84,11 +97,13 @@ public class Shooter_multi : MonoBehaviourPun
         if (range > 10)
             range = 10;
 
-        var color = GameManager_multi.getReactionColor(reactionMultiplier);
+        color = GameManager_multi.getReactionColor(reactionMultiplier);
         mat.SetColor("Color_D1155CB1", color);
         
         bullet.GetComponent<Bullet_multi>().init(reactionMultiplier, lifeTime, this.range * 0.2f, target,
                                             color);
+        //photonView.RPC("syncColor", RpcTarget.Others, color.toVec3());
+        photonView.RPC("syncVars", RpcTarget.Others, reactionMultiplier, lifeTime);
     }
 
     private void FixedUpdate()
@@ -137,7 +152,6 @@ public class Shooter_multi : MonoBehaviourPun
             bullet.GetComponent<Bullet_multi>().fire();
         }
     }
-
     private void rotate(bool rotateCCW)
     {
         //transform.Rotate()
@@ -185,23 +199,37 @@ public class Shooter_multi : MonoBehaviourPun
     private void OnDestroy()
     {
         Destroy(this.mat);
+        if (!photonView.IsMine)
+        {
+            foreach (var wheelMat in wheelMaterials)
+            {
+                Destroy(wheelMat);
+            }
+
+            Destroy(gunMat);
+        }
     }
     private static void setTowers()
     {
         TOWERS = GameObject.FindGameObjectsWithTag("Tower");
     }
-    public static TroopColor getTroopColor(float reactionMultiplier)
+    [PunRPC]
+    private void syncColor(Vector3 color)
     {
-        switch (reactionMultiplier)
+        if (!photonView.IsMine)
         {
-            case 1f:
-                return TroopColor.WHITE;
-            case 1.25f:
-                return TroopColor.GREEN;
-            case 1.5f:
-                return TroopColor.PURPLE;
-            default:
-                return TroopColor.WHITE;
+            mat.SetColor("Color_DC628308", EnemyColor);
+            mat.SetColor("Color_D1155CB1", color.toColor(1));
         }
     }
+
+    [PunRPC]
+    private void syncVars(float reactionMultiplier, float lifeTime)
+    {
+        if (!photonView.IsMine)
+        {
+            this.init(reactionMultiplier, lifeTime);
+        }
+    }
+
 }

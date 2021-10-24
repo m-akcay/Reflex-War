@@ -24,23 +24,25 @@ public class Tower_multi : MonoBehaviourPun
     }
     public void applyDamage(float damage, int layer)
     {
-        Debug.Log(damage);
-        //if (layer == Bullet_multi.EnemyBulletLayer)
-        //{
-        //    damageTakenFromEnemy += damage;
-        //    if (damageTakenFromPlayer > damage)
-        //        damageTakenFromPlayer -= damage / 2;
-        //}
-        //else
-        //{
+        if (layer == Bullet_multi.EnemyBulletLayer)
+        {
+            damageTakenFromEnemy += damage;
+            if (damageTakenFromPlayer > damage)
+                damageTakenFromPlayer -= damage / 2;
+        }
+        else
+        {
             damageTakenFromPlayer += damage;
             if (damageTakenFromEnemy > damage)
                 damageTakenFromEnemy -= damage / 2;
-        //}
+        }
 
         //Debug.Log(string.Format("fromPlayer->{0}   fromEnemy->{1}", damageTakenFromPlayer, damageTakenFromEnemy));
-        
-        photonView.RPC("syncDamage", RpcTarget.Others, damageTakenFromEnemy, damageTakenFromPlayer);
+
+        //photonView.RPC("syncDamage", RpcTarget.Others, damageTakenFromEnemy, damageTakenFromPlayer);
+        var totalDamage = damageTakenFromEnemy + damageTakenFromPlayer;
+        healthBarMat.SetFloat("_SplitPos", damageTakenFromPlayer / totalDamage);
+
     }
 
     [PunRPC]

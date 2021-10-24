@@ -40,6 +40,11 @@ MonoBehaviour:
   - Fire
   - RespawnSpaceship
   - syncDamage
+  - setReflexPhase
+  - setUniversalVars
+  - syncColor
+  - shootSignal
+  - syncVars
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

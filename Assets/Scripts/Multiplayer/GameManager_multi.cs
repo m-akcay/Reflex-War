@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class GameManager_multi : MonoBehaviourPun
 {
+    private bool reflexStarted = false;
+    private List<int> randPosIdx;
     [SerializeField]
     private Color purple = new Color();
     private static Color PURPLE;
@@ -83,10 +85,18 @@ public class GameManager_multi : MonoBehaviourPun
     }
     public void startReflexPhase()
     {
-        //blurredPanel.SetActive(true);
+        setRandomColorIndices();
+
         setReferenceButtons();
         setButtons();
         this.reflexPhase = true;
+        photonView.RPC("setReflexPhase", RpcTarget.All, true);
+        photonView.RPC("setUniversalVars", RpcTarget.All, difficulty, chosenColorIndices.ToArray(), randPosIdx.ToArray());
+    }
+    public void startReflexPhase_client()
+    {
+        setReferenceButtons_client();
+        setButtons_client();
     }
     public void finishReflexPhase()
     {
@@ -116,14 +126,41 @@ public class GameManager_multi : MonoBehaviourPun
                 finishReflexPhase();
         }
     }
-
+    private IEnumerator enableReflexPhase_client()
+    {
+        if (difficulty < 11)
+            this.numOfActiveButtons = difficulty;
+        float waitTime = this.numOfActiveButtons * 2;
+        spawnAvailable = false;
+        startReflexPhase_client();
+        phaseStartTime = Time.realtimeSinceStartup;
+        //blurredPanel.SetActive(true);
+        yield return new WaitForSeconds(waitTime);
+        if (reflexPhase)
+            finishReflexPhase();
+        reflexStarted = false;
+    }
     public void setReferenceButtons()
     {
         float buttonSpacing = Screen.width * 0.09f;
         float startPosX = (Screen.width - (buttonSpacing * (this.numOfActiveButtons - 1))) / 2;
         var startPos = new Vector3(startPosX, Screen.height * 0.95f, fixedZ);
+        
+        for (int i = 0; i < this.numOfActiveButtons; i++)
+        {
+            var screenPos = startPos.addX(i * buttonSpacing);
+            var referenceButton = referenceButtons[i];
+            referenceButton.SetActive(true);
+            referenceButton.transform.position = mainCam.ScreenToWorldPoint(screenPos);
+            referenceButton.GetComponent<SpriteRenderer>().color = COLORS[chosenColorIndices[i]];
+        }
 
-        setRandomColorIndices();
+    }
+    public void setReferenceButtons_client()
+    {
+        float buttonSpacing = Screen.width * 0.09f;
+        float startPosX = (Screen.width - (buttonSpacing * (this.numOfActiveButtons - 1))) / 2;
+        var startPos = new Vector3(startPosX, Screen.height * 0.95f, fixedZ);
 
         for (int i = 0; i < this.numOfActiveButtons; i++)
         {
@@ -137,16 +174,24 @@ public class GameManager_multi : MonoBehaviourPun
     }
     public void setButtons()
     {
-        var randPosIdx = getRandomPositionIdx();
+        setRandomPositionIdx();
         for (int i = 0; i < this.numOfActiveButtons; i++)
         {
             reflexButtons[i].setPositionAndColor(BUTTON_POSITIONS[randPosIdx[i]], COLORS[chosenColorIndices[i]]);
             reflexButtons[i].activate();
         }
     }
-    private List<int> getRandomPositionIdx()
+    public void setButtons_client()
     {
-        var randPosIdx = new List<int>();
+        for (int i = 0; i < this.numOfActiveButtons; i++)
+        {
+            reflexButtons[i].setPositionAndColor(BUTTON_POSITIONS[randPosIdx[i]], COLORS[chosenColorIndices[i]]);
+            reflexButtons[i].activate();
+        }
+    }
+    private void setRandomPositionIdx()
+    {
+        randPosIdx = new List<int>();
         while (randPosIdx.Count < this.numOfActiveButtons)
         {
             int randIdx = Random.Range(0, BUTTON_POSITIONS.Count - 1);
@@ -156,7 +201,6 @@ public class GameManager_multi : MonoBehaviourPun
             }
             randPosIdx.Add(randIdx);
         }
-        return randPosIdx;
     }
     // called once in the start
     private void createColorArray()
@@ -254,8 +298,35 @@ public class GameManager_multi : MonoBehaviourPun
     }
 
     [PunRPC]
-    private void setUniversalColors(int[] chosenColorIndices)
+    private void setReflexPhase(bool reflexPhase)
     {
+        this.reflexPhase = reflexPhase;
+    }
+    [PunRPC]
+    private void setUniversalVars(int difficulty, int[] chosenColorIndices, int[] randPosIdx)
+    {
+        GameManager_multi.difficulty = difficulty;
         this.chosenColorIndices = new List<int>(chosenColorIndices);
+        this.randPosIdx = new List<int>(randPosIdx);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            Time.timeScale = 0;
+            StopAllCoroutines();
+        }
+
+
+        if (PhotonNetwork.IsMasterClient)
+            return;
+
+        if (reflexPhase && !reflexStarted)
+        {
+            Debug.Log("entered here");
+            reflexStarted = true;
+            StartCoroutine(enableReflexPhase_client());
+        }
     }
 }
