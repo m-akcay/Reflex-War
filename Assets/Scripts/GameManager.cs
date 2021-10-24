@@ -207,9 +207,7 @@ public class GameManager : MonoBehaviour
     }
     public static void increaseDifficulty()
     {
-        Debug.Log(difficulty);
-        if (difficulty < 10)
-            difficulty++;
+        difficulty++;
     }
     public static int getDifficulty()
     {

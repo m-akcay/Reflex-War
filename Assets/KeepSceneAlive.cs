@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class KeepSceneAlive : MonoBehaviour
 {
@@ -7,9 +6,11 @@ public class KeepSceneAlive : MonoBehaviour
 
     void Start()
     {
+#if UNITY_EDITOR
         if (this.KeepSceneViewActive && Application.isEditor)
         {
             UnityEditor.SceneView.FocusWindowIfItsOpen(typeof(UnityEditor.SceneView));
         }
+#endif
     }
 }

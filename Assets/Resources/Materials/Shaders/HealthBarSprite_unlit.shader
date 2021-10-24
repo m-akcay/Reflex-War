@@ -78,7 +78,7 @@ Shader "Unlit/HealthBarSprite_unlit"
 				half4 frag(v2f IN) : SV_Target
 				{
 					half4 c = tex2D(_MainTex, IN.texcoord);
-					if (IN.texcoord.x > _SplitPos)
+					if (IN.texcoord.x < _SplitPos)
 						c *= _Color;
 					else
 						c *= _Color2;
