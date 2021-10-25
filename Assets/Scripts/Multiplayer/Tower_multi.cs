@@ -15,8 +15,6 @@ public class Tower_multi : MonoBehaviourPun
     private float damageTakenFromEnemy;
     void Start()
     {
-        //if (GameManager_multi.mainCam.transform)
-        //    Debug.Log("null");
         healthBar.transform.LookAt(GameManager_multi.mainCam.transform);
         healthBarMat = healthBar.GetComponent<SpriteRenderer>().material;
         damageTakenFromEnemy = 0;
@@ -37,31 +35,8 @@ public class Tower_multi : MonoBehaviourPun
                 damageTakenFromEnemy -= damage / 2;
         }
 
-        //Debug.Log(string.Format("fromPlayer->{0}   fromEnemy->{1}", damageTakenFromPlayer, damageTakenFromEnemy));
-
-        //photonView.RPC("syncDamage", RpcTarget.Others, damageTakenFromEnemy, damageTakenFromPlayer);
         var totalDamage = damageTakenFromEnemy + damageTakenFromPlayer;
         healthBarMat.SetFloat("_SplitPos", damageTakenFromPlayer / totalDamage);
-
-    }
-
-    [PunRPC]
-    public void syncDamage(float damageTakenFromEnemy, float damageTakenFromPlayer)
-    {
-        var totalDamage = damageTakenFromEnemy + damageTakenFromPlayer;
-
-        if (photonView.IsMine)
-        {
-            this.damageTakenFromEnemy = damageTakenFromEnemy;
-            this.damageTakenFromPlayer = damageTakenFromPlayer;
-            healthBarMat.SetFloat("_SplitPos", damageTakenFromPlayer / totalDamage);
-        }
-        else
-        {
-            this.damageTakenFromEnemy = damageTakenFromPlayer;
-            this.damageTakenFromPlayer = damageTakenFromEnemy;
-            healthBarMat.SetFloat("_SplitPos", damageTakenFromEnemy / totalDamage);
-        }
     }
 
     private void OnDestroy()

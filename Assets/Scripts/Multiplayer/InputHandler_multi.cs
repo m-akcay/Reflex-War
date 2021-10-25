@@ -173,11 +173,9 @@ public class InputHandler_multi : MonoBehaviour
         var spawnRenderer = spawnIndicator.GetComponent<Renderer>();
         if (!spawnRenderer.enabled)
             spawnRenderer.enabled = true;
-        //if (PhotonNetwork.IsMasterClient)
-            spawnIndicator.transform.position = spawnPos;
-        //else
-        //    spawnIndicator.transform.position = new Vector3(-spawnPos.x, spawnPos.y, spawnPos.z);
-
+        
+        spawnIndicator.transform.position = spawnPos;
+        
         if (isAvailable)
         {
 
@@ -223,7 +221,6 @@ public class InputHandler_multi : MonoBehaviour
         setReactionMultiplier();
         spawnMaterial.SetColor("Color_D03AD5CF", spawnColor);
         groundMat.SetInt("Boolean_D1E5A8E9", 1);
-        GameManager_multi.increaseDifficulty();
     }
     private void spawnTroop()
     {
@@ -233,7 +230,8 @@ public class InputHandler_multi : MonoBehaviour
         else
             troop = PhotonNetwork.Instantiate("Prefabs/Shooter_online", spawnIndicator.transform.position, Quaternion.LookRotation(Vector3.back));
 
-        troop.GetComponent<Shooter_multi>().init(this.reactionMultiplier, GameManager_multi.getDifficulty() * 4);
+        //troop.GetComponent<Shooter_multi>().init(this.reactionMultiplier, GameManager_multi.getDifficulty() * 4);
+        troop.GetComponent<Shooter_multi>().init(this.reactionMultiplier, GameManager_multi.getDifficulty() * 40);
         gm.spawnAvailable = false;
         groundMat.SetInt("Boolean_D1E5A8E9", 0);
         gm.activeTroops.Add(troop);

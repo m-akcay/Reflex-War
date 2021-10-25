@@ -41,27 +41,45 @@ public class Shooter_multi : MonoBehaviourPun
 
     private bool rotating = false;
     private bool rotateCCW = false;
-
     private void Awake()
     {
         EnemyMask = _enemyMask;
-        if (!photonView.IsMine)
-        {
-            this.gameObject.layer = 13;
-        }
+    }
+    private void Start()
+    {
+        
+    }
+    // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
+    public void init(float reactionMultiplier, float lifeTime)
+    {
+        if (TOWERS.Length == 0)
+            setTowers();
+        setTarget();
 
-        // will look at here
+        rb = GetComponent<Rigidbody>();
         mat = GetComponent<Renderer>().material;
 
+        var scaledReactionMultiplier = reactionMultiplier * GameManager_multi.getDifficultyMultiplier();
+        speed = BASE_SPEED * scaledReactionMultiplier;
+        range = BASE_RANGE * scaledReactionMultiplier;
+        if (range > 10)
+            range = 10;
+
+        color = GameManager_multi.getReactionColor(reactionMultiplier);
+        mat.SetColor("Color_D1155CB1", color);
+        
+        bullet.GetComponent<Bullet_multi>().init(reactionMultiplier, lifeTime, this.range * 0.2f, target,
+                                            color);
+        
         if (photonView.IsMine)
-            mat.SetColor("Color_DC628308", FriendColor);
+        {
+            photonView.RPC("syncVars", RpcTarget.Others, reactionMultiplier, lifeTime);
+        }
         else
         {
-            mat.SetColor("Color_DC628308", EnemyColor);
+            this.gameObject.layer = 13;
 
-            if (TOWERS.Length == 0)
-                setTowers();
-            setTarget();
+            mat.SetColor("Color_DC628308", EnemyColor);
 
             wheelMaterials = new Material[4];
             for (int i = 0; i < wheels.Length; i++)
@@ -78,38 +96,12 @@ public class Shooter_multi : MonoBehaviourPun
             gunMat.SetColor("_BaseColor", EnemyColor);
         }
     }
-    private void Start()
-    {
-        
-    }
-    // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
-    public void init(float reactionMultiplier, float lifeTime)
-    {
-        if (TOWERS.Length == 0)
-            setTowers();
-        setTarget();
-
-        rb = GetComponent<Rigidbody>();
-        
-        var scaledReactionMultiplier = reactionMultiplier * GameManager_multi.getDifficultyMultiplier();
-        speed = BASE_SPEED * scaledReactionMultiplier;
-        range = BASE_RANGE * scaledReactionMultiplier;
-        if (range > 10)
-            range = 10;
-
-        color = GameManager_multi.getReactionColor(reactionMultiplier);
-        mat.SetColor("Color_D1155CB1", color);
-        
-        bullet.GetComponent<Bullet_multi>().init(reactionMultiplier, lifeTime, this.range * 0.2f, target,
-                                            color);
-        //photonView.RPC("syncColor", RpcTarget.Others, color.toVec3());
-        photonView.RPC("syncVars", RpcTarget.Others, reactionMultiplier, lifeTime);
-    }
 
     private void FixedUpdate()
     {
         if (!photonView.IsMine)
             return;
+
         Vector3 posDiff = (target.position - transform.position);
         Vector3 moveDirection = posDiff.normalized;
         distance = posDiff.magnitude;
@@ -122,23 +114,20 @@ public class Shooter_multi : MonoBehaviourPun
             }
             attacking = false;
         }
-        else if (!rotating)
+        else if (!rotating && !attacking)
         {
-            stop();
-            setRotationDirection();
-            rotating = true;
+            startRotation();
         }
     }
     private void Update()
     {
         if (!photonView.IsMine)
-        {
             return;
-        }
+
+        float angle = Vector3.Angle(transform.forward.xz(), target.transform.position.xz() - transform.position.xz());
 
         if (rotating)
         {
-            float angle = Vector3.Angle(transform.forward.xz(), target.transform.position.xz() - transform.position.xz());
             if (angle < 5f)
             {
                 rotating = false;
@@ -149,12 +138,16 @@ public class Shooter_multi : MonoBehaviourPun
         }
         else if (attacking)
         {
+            if (angle > 5f)
+            {
+                startRotation();
+                return;
+            }
             bullet.GetComponent<Bullet_multi>().fire();
         }
     }
     private void rotate(bool rotateCCW)
     {
-        //transform.Rotate()
         transform.Rotate(Vector3.up, 20f * Time.deltaTime * (rotateCCW ? -1 : 1));
     }
     private void setRotationDirection()
@@ -165,6 +158,12 @@ public class Shooter_multi : MonoBehaviourPun
             rotateCCW = true;
         else
             rotateCCW = false;
+    }
+    private void startRotation()
+    {
+        stop();
+        setRotationDirection();
+        rotating = true;
     }
     private void stop()
     {
@@ -212,15 +211,6 @@ public class Shooter_multi : MonoBehaviourPun
     private static void setTowers()
     {
         TOWERS = GameObject.FindGameObjectsWithTag("Tower");
-    }
-    [PunRPC]
-    private void syncColor(Vector3 color)
-    {
-        if (!photonView.IsMine)
-        {
-            mat.SetColor("Color_DC628308", EnemyColor);
-            mat.SetColor("Color_D1155CB1", color.toColor(1));
-        }
     }
 
     [PunRPC]

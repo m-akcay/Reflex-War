@@ -32,37 +32,30 @@ public class Bullet_multi : MonoBehaviourPun
             return _isAvailable && (Time.realtimeSinceStartup - timeSinceAvailable > fireRate); 
         } 
     }
-    private void Awake()
-    {
-        bulletRb = this.GetComponent<Rigidbody>();
-        bulletMat = this.GetComponent<Renderer>().material;
 
-        if (!photonView.IsMine)
-        {
-            this.gameObject.layer = EnemyBulletLayer;
-            bulletMat.SetColor("Color_F3BBF886", shooter.color);
-            this.target = shooter.target;
-        }
-    }
     private void Start()
     {
-        //if (photonView.IsMine)
-        //    _isAvailable = true;
-        //else
-            _isAvailable = true;
+        _isAvailable = true;
         parentGo = this.transform.parent.gameObject;
     }
     public void init(float reactionMultiplier, float lifeTime, float forceMultiplier, Transform target, Color color)
     {
+        bulletRb = this.GetComponent<Rigidbody>();
+        bulletMat = this.GetComponent<Renderer>().material;
+
         var scaledReactionMultiplier = reactionMultiplier * GameManager_multi.getDifficultyMultiplier();
 
-        this.lifeTime = lifeTime;
+        // WARNING
+        //this.lifeTime = lifeTime;
+        this.lifeTime = lifeTime ;
         this.forceMultiplier = forceMultiplier;
         this.damage = Shooter_multi.BASE_DAMAGE * scaledReactionMultiplier;
         this.target = target;
         
         this.fireRate = Shooter_multi.BASE_FIRE_RATE / scaledReactionMultiplier;
         bulletMat.SetColor("Color_F3BBF886", color);
+        if (!photonView.IsMine)
+            this.gameObject.layer = EnemyBulletLayer;
     }
     public void fire()
     {
@@ -93,18 +86,6 @@ public class Bullet_multi : MonoBehaviourPun
         bulletRb.AddForce(forceDir * this.forceMultiplier, ForceMode.Impulse);
     }
 
-    private void FixedUpdate()
-    {
-        //if (!photonView.IsMine)
-        //{
-        //    if (_isAvailable)
-        //    {
-        //        shoot();
-        //        _isAvailable = false;
-        //    }
-        //}
-    }
-
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Tower")
@@ -124,7 +105,6 @@ public class Bullet_multi : MonoBehaviourPun
     [PunRPC]
     private void shootSignal()
     {
-        //_isAvailable = true;
         shoot();
         if (!destroyTimerStarted)
         {

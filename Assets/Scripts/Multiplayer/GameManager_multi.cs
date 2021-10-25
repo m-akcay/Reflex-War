@@ -119,8 +119,9 @@ public class GameManager_multi : MonoBehaviourPun
             yield return new WaitForSeconds(waitTime);
             spawnAvailable = false;
             startReflexPhase();
+            difficulty++;
             phaseStartTime = Time.realtimeSinceStartup;
-            //blurredPanel.SetActive(true);
+            blurredPanel.SetActive(true);
             yield return new WaitForSeconds(waitTime * 2);
             if (reflexPhase)
                 finishReflexPhase();
@@ -134,7 +135,7 @@ public class GameManager_multi : MonoBehaviourPun
         spawnAvailable = false;
         startReflexPhase_client();
         phaseStartTime = Time.realtimeSinceStartup;
-        //blurredPanel.SetActive(true);
+        blurredPanel.SetActive(true);
         yield return new WaitForSeconds(waitTime);
         if (reflexPhase)
             finishReflexPhase();
@@ -256,10 +257,6 @@ public class GameManager_multi : MonoBehaviourPun
                 this.BUTTON_POSITIONS.Add(buttonPos);
             }
         }
-    }
-    public static void increaseDifficulty()
-    {
-        difficulty++;
     }
     public static int getDifficulty()
     {
