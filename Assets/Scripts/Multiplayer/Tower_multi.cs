@@ -5,9 +5,14 @@ public class Tower_multi : MonoBehaviourPun
 {
     [SerializeField]
     private float remainingHealth;
+    
     [SerializeField]
     private GameObject healthBar;
     private Material healthBarMat;
+
+    [SerializeField]
+    private GameObject winnerIndicator;
+    private Material winnerIndicatorMat;
 
     [SerializeField]
     private float damageTakenFromPlayer;
@@ -17,6 +22,9 @@ public class Tower_multi : MonoBehaviourPun
     {
         healthBar.transform.LookAt(GameManager_multi.mainCam.transform);
         healthBarMat = healthBar.GetComponent<SpriteRenderer>().material;
+
+        winnerIndicatorMat = winnerIndicator.GetComponent<Renderer>().material;
+
         damageTakenFromEnemy = 0;
         damageTakenFromPlayer = 0;
     }
@@ -35,12 +43,21 @@ public class Tower_multi : MonoBehaviourPun
                 damageTakenFromEnemy -= damage / 2;
         }
 
+        setColors();
+    }
+
+    private void setColors()
+    {
         var totalDamage = damageTakenFromEnemy + damageTakenFromPlayer;
-        healthBarMat.SetFloat("_SplitPos", damageTakenFromPlayer / totalDamage);
+        float splitPos = damageTakenFromPlayer / totalDamage;
+
+        healthBarMat.SetFloat("_SplitPos", splitPos);
+        winnerIndicatorMat.SetColor("_BaseColor", (splitPos < 0.5f) ? Shooter_multi.EnemyColor : Shooter_multi.FriendColor);
     }
 
     private void OnDestroy()
     {
         Destroy(healthBarMat);
+        Destroy(winnerIndicatorMat);
     }
 }

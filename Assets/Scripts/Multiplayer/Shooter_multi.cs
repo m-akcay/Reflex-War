@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 public class Shooter_multi : MonoBehaviourPun
 {
-    private static Color FriendColor = new Color(0.3529412f, 0.7764706f, 1f, 1f);
-    private static Color EnemyColor = new Color(1f, 0.5f, 0f, 1f);
+    public static Color FriendColor = new Color(0.3529412f, 0.7764706f, 1f, 1f);
+    public static Color EnemyColor = new Color(1f, 0.5f, 0f, 1f);
 
     [SerializeField]
     private LayerMask _enemyMask;
