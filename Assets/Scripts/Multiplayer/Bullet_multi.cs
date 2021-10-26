@@ -7,11 +7,9 @@ public class Bullet_multi : MonoBehaviourPun
 {
     public const int EnemyBulletLayer = 14;
 
-    [SerializeField]
-    private Shooter_multi shooter;
     private GameObject parentGo;
     [SerializeField]
-    private Transform target;
+    public Transform target = null;
     [SerializeField]
     private float timeSinceAvailable = 0;
     private bool _isAvailable;

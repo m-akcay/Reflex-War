@@ -1022,7 +1022,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 118110c2a2c7c424aaedf98aa770dde6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shooter: {fileID: -3560407331681321177}
   target: {fileID: 0}
   timeSinceAvailable: 0
   fireRate: 0

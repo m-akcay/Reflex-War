@@ -1,10 +1,16 @@
 ﻿using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
 public class GameManager_multi : MonoBehaviourPun
 {
+    public static bool GameOver = false;
     private bool reflexStarted = false;
     private List<int> randPosIdx;
     [SerializeField]
@@ -16,9 +22,11 @@ public class GameManager_multi : MonoBehaviourPun
     [SerializeField]
     private Color white = new Color();
     private static Color WHITE;
-    [SerializeField]
-    private Color red = new Color();
-    private static Color RED;
+
+    private const float TimeLimit_seconds = 10f;
+    //private const float TimeLimit_seconds = 203f;
+    private float referenceStartTime = -1f;
+    public static bool[] TowersWon = new bool[] { true, true, true };
 
     private const float fixedZ = 1.5f;
     [SerializeField]
@@ -28,6 +36,9 @@ public class GameManager_multi : MonoBehaviourPun
     [SerializeField, Range(4, 10)]
     private int numOfActiveButtons = 4;
     private static int difficulty = 4;
+
+    [SerializeField]
+    private TextMeshProUGUI remainingTimeText;
 
     private List<GameObject> referenceButtons = null;
     private List<Color> COLORS;
@@ -54,6 +65,7 @@ public class GameManager_multi : MonoBehaviourPun
         }
     }
     public List<GameObject> activeTroops;
+    private float remainingTime;
 
     private void Awake()
     {
@@ -79,6 +91,13 @@ public class GameManager_multi : MonoBehaviourPun
         }
         createPositionArray();
         createColorArray();
+
+        if (PhotonNetwork.IsMasterClient)
+        {
+            this.referenceStartTime = Time.timeSinceLevelLoad;
+            StartCoroutine(updateTimer());
+            photonView.RPC("startTimer", RpcTarget.Others);
+        }
 
         if (PhotonNetwork.IsMasterClient)
             StartCoroutine(enableReflexPhase());
@@ -309,12 +328,15 @@ public class GameManager_multi : MonoBehaviourPun
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.K))
+        //if (Input.GetKeyDown(KeyCode.K))
+        //{
+        //    Time.timeScale = 0;
+        //    StopAllCoroutines();
+        //}
+        if (remainingTime < 3f && this.reflexPhase)
         {
-            Time.timeScale = 0;
-            StopAllCoroutines();
-        }
-
+            finishReflexPhase();
+        }    
 
         if (PhotonNetwork.IsMasterClient)
             return;
@@ -325,5 +347,37 @@ public class GameManager_multi : MonoBehaviourPun
             reflexStarted = true;
             StartCoroutine(enableReflexPhase_client());
         }
+    }
+
+    private IEnumerator updateTimer()
+    {
+        remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
+
+        while (remainingTime > 0f)
+        {
+            remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
+            remainingTimeText.text = string.Format("{0:0}:{1:00}", Mathf.FloorToInt(remainingTime / 60), Mathf.FloorToInt(remainingTime) % 60);
+            yield return new WaitForSecondsRealtime(1);
+        }
+
+        remainingTimeText.text = string.Format("{0:0}:{1:00}", 0, 0);
+        finishGame();
+    }
+
+    [PunRPC]
+    private void startTimer()
+    {
+        this.referenceStartTime = Time.timeSinceLevelLoad;
+        StartCoroutine(updateTimer());    
+    }
+
+    private void finishGame()
+    {
+        GameObject.FindGameObjectsWithTag("Troop").ToList()
+            .Where(shooter => shooter.GetComponent<PhotonView>().IsMine)
+            .ToList()
+            .ForEach(shooter => shooter.GetComponent<Shooter_multi>().disable());
+
+        GameOver = true;
     }
 }

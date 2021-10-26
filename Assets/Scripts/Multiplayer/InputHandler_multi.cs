@@ -56,13 +56,7 @@ public class InputHandler_multi : MonoBehaviour
     // max world distance is 3 (-1.5 to 1.5)
     // for line sprites
     public const float SCREEN_FACTOR = 23 / 3.1f;
-    public bool firstButton
-    {
-        get
-        {
-            return nextButtonIdx > 0;
-        }
-    }
+
     void Start()
     {
         mainCam = GameManager_multi.mainCam;
@@ -73,6 +67,7 @@ public class InputHandler_multi : MonoBehaviour
         spawnColor = white;
         lastAvailableSpawnPos = new Vector3();
         groundMat = GameObject.Find("Ground").GetComponent<Renderer>().material;
+        groundMat.SetInt("GreenEnabled", 1);
 
         if (PhotonNetwork.IsMasterClient)
         {

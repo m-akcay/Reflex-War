@@ -78,6 +78,7 @@ public class Shooter_multi : MonoBehaviourPun
         else
         {
             this.gameObject.layer = 13;
+            rb.useGravity = false;
 
             mat.SetColor("Color_DC628308", EnemyColor);
 
@@ -85,10 +86,11 @@ public class Shooter_multi : MonoBehaviourPun
             for (int i = 0; i < wheels.Length; i++)
             {
                 var wheel = wheels[i];
-                wheel.maxAngularVelocity *= 2;
                 wheelMaterials[i] = wheel.gameObject.GetComponent<Renderer>().material;
                 wheelMaterials[i].SetColor("_BaseColor", EnemyColor);
-
+                wheel.useGravity = false;
+                wheel.gameObject.GetComponent<SphereCollider>().enabled = false;
+                //wheel.isKinematic = true;
             }
 
             var gunObj = transform.Find("Gun");
@@ -194,6 +196,7 @@ public class Shooter_multi : MonoBehaviourPun
         }
 
         this.target = TOWERS[idx].transform;
+        bullet.GetComponent<Bullet_multi>().target = this.target;
     }
     private void OnDestroy()
     {
@@ -222,4 +225,16 @@ public class Shooter_multi : MonoBehaviourPun
         }
     }
 
+    public void disable()
+    {
+        bullet.SetActive(false);
+
+        foreach (var wheel in wheels)
+        {
+            wheel.isKinematic = true;
+        }
+        rb.isKinematic = true;
+
+        attacking = false;
+    }
 }
