@@ -24,6 +24,7 @@ Shader "Unlit/HealthBarSprite_unlit"
 			Cull Off
 			Lighting Off
 			ZWrite Off
+			ZTest LEqual
 			Blend One OneMinusSrcAlpha
 
 			Pass

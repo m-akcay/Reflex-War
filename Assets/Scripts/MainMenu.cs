@@ -4,10 +4,13 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviourPunCallbacks
 {
-    [SerializeField] private GameObject findOpponentPanel = null;
+    [SerializeField] private GameObject singlePlayerButton = null;
+    [SerializeField] private GameObject multiPlayerButton = null;
     [SerializeField] private GameObject waitingStatusPanel = null;
     [SerializeField] private TextMeshProUGUI waitingStatusText = null;
 
@@ -19,11 +22,19 @@ public class MainMenu : MonoBehaviourPunCallbacks
     {
         PhotonNetwork.AutomaticallySyncScene = true;
     }
-    public void findOpponent()
+
+    public void singleplayerButton_onClick()
     {
+        SceneManager.LoadScene("WarScene");
+    }
+
+    public void multiplayerButton_onClick()
+    {
+        singlePlayerButton.SetActive(false);
+        multiPlayerButton.SetActive(false);
+
         isConnecting = true;
 
-        findOpponentPanel.SetActive(false);
         waitingStatusPanel.SetActive(true);
         
         waitingStatusText.text = "Searching...";
@@ -51,7 +62,8 @@ public class MainMenu : MonoBehaviourPunCallbacks
     public override void OnDisconnected(DisconnectCause cause)
     {
         waitingStatusPanel.SetActive(false);
-        findOpponentPanel.SetActive(true);
+        multiPlayerButton.SetActive(true);
+        singlePlayerButton.SetActive(true);
         Debug.Log($"Disconnectted due to {cause}");
     }
 
@@ -88,5 +100,19 @@ public class MainMenu : MonoBehaviourPunCallbacks
 
             PhotonNetwork.LoadLevel("WarScene_multiplayer");
         }
+    }
+
+    private void Update()
+    {
+        if (isConnecting && Input.GetKeyDown(KeyCode.Escape))
+        {
+            isConnecting = false;
+            PhotonNetwork.Disconnect();
+        }
+    }
+
+    public void quit_onClick()
+    {
+        Application.Quit();
     }
 }

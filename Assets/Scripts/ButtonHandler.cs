@@ -15,6 +15,6 @@ public class ButtonHandler : MonoBehaviour
     }
     public void onClick_multiPlayer_button()
     {
-        Debug.Log("multi_onClick");
+
     }
 }

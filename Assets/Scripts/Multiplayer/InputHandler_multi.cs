@@ -67,7 +67,7 @@ public class InputHandler_multi : MonoBehaviour
         spawnColor = white;
         lastAvailableSpawnPos = new Vector3();
         groundMat = GameObject.Find("Ground").GetComponent<Renderer>().material;
-        groundMat.SetInt("GreenEnabled", 1);
+        groundMat.SetInt("Boolean_D1E5A8E9", 1);
 
         if (PhotonNetwork.IsMasterClient)
         {
@@ -122,6 +122,7 @@ public class InputHandler_multi : MonoBehaviour
         else
         {
             resetVariables();
+
             if (gm.spawnAvailable)
             {
                 Vector3 spawnPos;
@@ -138,7 +139,7 @@ public class InputHandler_multi : MonoBehaviour
             }
             else
             {
-                groundMat.SetInt("GreenEnabled", 0);
+                groundMat.SetInt("Boolean_D1E5A8E9", 0);
                 spawnIndicator.GetComponent<Renderer>().enabled = false;
             }
         }

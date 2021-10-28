@@ -23,8 +23,8 @@ public class GameManager_multi : MonoBehaviourPun
     private Color white = new Color();
     private static Color WHITE;
 
-    private const float TimeLimit_seconds = 10f;
-    //private const float TimeLimit_seconds = 203f;
+    //private const float TimeLimit_seconds = 10f;
+    private const float TimeLimit_seconds = 203f;
     private float referenceStartTime = -1f;
     public static bool[] TowersWon = new bool[] { true, true, true };
 
@@ -45,6 +45,7 @@ public class GameManager_multi : MonoBehaviourPun
     private List<int> chosenColorIndices;
     private List<Vector3> BUTTON_POSITIONS;
     private GameObject blurredPanel = null;
+    private GameObject blackBackground = null;
 
     [SerializeField]
     public bool spawnAvailable;
@@ -83,7 +84,9 @@ public class GameManager_multi : MonoBehaviourPun
         var lines = new List<GameObject>(GameObject.FindGameObjectsWithTag("Line"));
         Debug.Log(lines.Count);
         blurredPanel = GameObject.Find("BlurredPanel");
-        blurredPanel.SetActive(false);
+        blackBackground = GameObject.Find("BlackBackground");
+        disableBlur();
+
         reflexButtons = new List<ReflexButton_multi>();
         for (int i = 0; i < buttons.Count; i++)
         {
@@ -122,7 +125,7 @@ public class GameManager_multi : MonoBehaviourPun
         this.reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
-        blurredPanel.SetActive(false);
+        disableBlur();
     }
     public bool isFinalButton(int buttonIdx)
     {
@@ -140,7 +143,7 @@ public class GameManager_multi : MonoBehaviourPun
             startReflexPhase();
             difficulty++;
             phaseStartTime = Time.realtimeSinceStartup;
-            blurredPanel.SetActive(true);
+            enableBlur();
             yield return new WaitForSeconds(waitTime * 2);
             if (reflexPhase)
                 finishReflexPhase();
@@ -154,7 +157,7 @@ public class GameManager_multi : MonoBehaviourPun
         spawnAvailable = false;
         startReflexPhase_client();
         phaseStartTime = Time.realtimeSinceStartup;
-        blurredPanel.SetActive(true);
+        enableBlur();
         yield return new WaitForSeconds(waitTime);
         if (reflexPhase)
             finishReflexPhase();
@@ -312,6 +315,17 @@ public class GameManager_multi : MonoBehaviourPun
             mainCam.gameObject.SetActive(true);
         }
     }
+    private void enableBlur()
+    {
+        blurredPanel.SetActive(true);
+        blackBackground.SetActive(true);
+    }
+    private void disableBlur()
+    {
+        blurredPanel.SetActive(false);
+        blackBackground.SetActive(false);
+    }
+
 
     [PunRPC]
     private void setReflexPhase(bool reflexPhase)
