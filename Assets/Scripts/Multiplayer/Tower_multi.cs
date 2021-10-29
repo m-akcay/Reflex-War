@@ -33,14 +33,12 @@ public class Tower_multi : MonoBehaviourPun
         if (layer == Bullet_multi.EnemyBulletLayer)
         {
             damageTakenFromEnemy += damage;
-            if (damageTakenFromPlayer > damage)
-                damageTakenFromPlayer -= damage / 2;
+            damageTakenFromPlayer = Mathf.Clamp(damageTakenFromPlayer - damage, 0, float.MaxValue);
         }
         else
         {
             damageTakenFromPlayer += damage;
-            if (damageTakenFromEnemy > damage)
-                damageTakenFromEnemy -= damage / 2;
+            damageTakenFromEnemy = Mathf.Clamp(damageTakenFromEnemy - damage, 0, float.MaxValue);
         }
 
         setColors();

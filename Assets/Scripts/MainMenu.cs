@@ -12,6 +12,11 @@ public class MainMenu : MonoBehaviourPunCallbacks
     [SerializeField] private GameObject singlePlayerButton = null;
     [SerializeField] private GameObject multiPlayerButton = null;
     [SerializeField] private GameObject waitingStatusPanel = null;
+    [SerializeField] private GameObject cancelConnectionButton = null;
+
+    [SerializeField] private GameObject settingsPanel = null;
+    [SerializeField] private GameObject settingsButton = null;
+
     [SerializeField] private TextMeshProUGUI waitingStatusText = null;
 
     private bool isConnecting = false;
@@ -80,12 +85,14 @@ public class MainMenu : MonoBehaviourPunCallbacks
         int playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
         if (playerCount != MaxPlayersPerRoom)
         {
-            waitingStatusText.text = "Waiting for Opponent";
+            waitingStatusText.text = "Waiting for opponent";
+            cancelConnectionButton.SetActive(true);
+
             Debug.Log("Client is waiting for opponent");
         }
         else
         {
-            waitingStatusText.text = "Opponent Found";
+            waitingStatusText.text = "Opponent found";
             Debug.Log("Matching is ready to begin");
         }
     }
@@ -96,23 +103,38 @@ public class MainMenu : MonoBehaviourPunCallbacks
         {
             PhotonNetwork.CurrentRoom.IsOpen = false;
             Debug.Log("Match is ready to begin");
-            waitingStatusText.text = "Opponent Found";
+            waitingStatusText.text = "Opponent found";
 
             PhotonNetwork.LoadLevel("WarScene_multiplayer");
         }
     }
 
-    private void Update()
+    public void settings_onClick()
     {
-        if (isConnecting && Input.GetKeyDown(KeyCode.Escape))
-        {
-            isConnecting = false;
-            PhotonNetwork.Disconnect();
-        }
+        settingsPanel.SetActive(true);
+        GetComponent<PlayerNameInput>().enableNameInput();
+        settingsButton.SetActive(false);
     }
-
+    public void settings_back_onClick()
+    {
+        GetComponent<PlayerNameInput>().disableNameInput();
+        settingsPanel.SetActive(false);
+        settingsButton.SetActive(true);
+    }
     public void quit_onClick()
     {
+        PhotonNetwork.Disconnect();
         Application.Quit();
+    }
+
+    public void cancelConnection_onClick()
+    {
+        //PhotonNetwork.LeaveRoom();
+        //PhotonNetwork.LeaveLobby();
+        PhotonNetwork.Disconnect();
+        singlePlayerButton.SetActive(true);
+        multiPlayerButton.SetActive(true);
+        cancelConnectionButton.SetActive(false);
+        waitingStatusPanel.SetActive(false);
     }
 }

@@ -24,7 +24,6 @@ public class Tower : MonoBehaviour
     }
     public void applyDamage(float damage, Shooter.TroopColor troopColor)
     {
-        Debug.Log(damage);
         if (troopColor == Shooter.TroopColor.GREEN || troopColor == Shooter.TroopColor.WHITE)
         {
             damageTakenFromEnemy += damage;

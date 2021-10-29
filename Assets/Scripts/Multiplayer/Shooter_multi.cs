@@ -90,7 +90,6 @@ public class Shooter_multi : MonoBehaviourPun
                 wheelMaterials[i].SetColor("_BaseColor", EnemyColor);
                 wheel.useGravity = false;
                 wheel.gameObject.GetComponent<SphereCollider>().enabled = false;
-                //wheel.isKinematic = true;
             }
 
             var gunObj = transform.Find("Gun");

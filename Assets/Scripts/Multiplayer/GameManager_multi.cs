@@ -11,6 +11,7 @@ using Random = UnityEngine.Random;
 public class GameManager_multi : MonoBehaviourPun
 {
     public static bool GameOver = false;
+    [SerializeField] private GameObject enemyNamePlate = null;
     private bool reflexStarted = false;
     private List<int> randPosIdx;
     [SerializeField]
@@ -26,7 +27,6 @@ public class GameManager_multi : MonoBehaviourPun
     //private const float TimeLimit_seconds = 10f;
     private const float TimeLimit_seconds = 203f;
     private float referenceStartTime = -1f;
-    public static bool[] TowersWon = new bool[] { true, true, true };
 
     private const float fixedZ = 1.5f;
     [SerializeField]
@@ -38,7 +38,7 @@ public class GameManager_multi : MonoBehaviourPun
     private static int difficulty = 4;
 
     [SerializeField]
-    private TextMeshProUGUI remainingTimeText;
+    private TextMeshProUGUI remainingTimeText = null;
 
     private List<GameObject> referenceButtons = null;
     private List<Color> COLORS;
@@ -74,6 +74,9 @@ public class GameManager_multi : MonoBehaviourPun
     }
     private void Start()
     {
+        //PhotonNetwork.PlayerListOthers.ToList().ForEach(player => enemyNick = player.NickName);
+        enemyNamePlate.GetComponentInChildren<TextMeshProUGUI>().text = PhotonNetwork.PlayerListOthers[0].NickName;
+
         WHITE = white;
         GREEN = green;
         PURPLE = purple;
@@ -114,11 +117,14 @@ public class GameManager_multi : MonoBehaviourPun
         this.reflexPhase = true;
         photonView.RPC("setReflexPhase", RpcTarget.All, true);
         photonView.RPC("setUniversalVars", RpcTarget.All, difficulty, chosenColorIndices.ToArray(), randPosIdx.ToArray());
+
+        QuitHandler.QuitAvailable = false;
     }
     public void startReflexPhase_client()
     {
         setReferenceButtons_client();
         setButtons_client();
+        QuitHandler.QuitAvailable = false;
     }
     public void finishReflexPhase()
     {
@@ -126,6 +132,7 @@ public class GameManager_multi : MonoBehaviourPun
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
         disableBlur();
+        QuitHandler.QuitAvailable = true;
     }
     public bool isFinalButton(int buttonIdx)
     {
@@ -319,11 +326,13 @@ public class GameManager_multi : MonoBehaviourPun
     {
         blurredPanel.SetActive(true);
         blackBackground.SetActive(true);
+        enemyNamePlate.SetActive(false);
     }
     private void disableBlur()
     {
         blurredPanel.SetActive(false);
         blackBackground.SetActive(false);
+        enemyNamePlate.SetActive(true);
     }
 
 
@@ -384,7 +393,6 @@ public class GameManager_multi : MonoBehaviourPun
         this.referenceStartTime = Time.timeSinceLevelLoad;
         StartCoroutine(updateTimer());    
     }
-
     private void finishGame()
     {
         GameObject.FindGameObjectsWithTag("Troop").ToList()
@@ -393,5 +401,9 @@ public class GameManager_multi : MonoBehaviourPun
             .ForEach(shooter => shooter.GetComponent<Shooter_multi>().disable());
 
         GameOver = true;
+
+        StopAllCoroutines();
+
+        QuitHandler.QuitAvailable = true;
     }
 }
