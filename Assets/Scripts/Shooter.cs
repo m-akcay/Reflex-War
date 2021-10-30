@@ -1,18 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+
 public class Shooter : MonoBehaviour
 {
-    public enum TroopColor
-    { 
-        WHITE,
-        GREEN,
-        PURPLE
-    }
-
-    private TroopColor troopColor;
-
-    private static GameObject[] TOWERS = new GameObject[] { };
+    public static List<GameObject> TOWERS = new List<GameObject>();
     public const float BASE_FIRE_RATE = 1.5f;
     public const float BASE_DAMAGE = 30;
     public const float BASE_SPEED = 0.4f;
@@ -28,14 +20,17 @@ public class Shooter : MonoBehaviour
     [SerializeField]
     private float distance;
     [SerializeField]
-    private Rigidbody[] wheels;
+    private Rigidbody[] wheels = null;
     private Rigidbody rb;
     [SerializeField]
-    private GameObject bullet;
+    private GameObject bullet = null;
     private Material mat;
 
     private bool rotating = false;
     private bool rotateCCW = false;
+
+    private bool finished = false;
+    private bool gettingDestroyed = false;
 
     private void Start()
     {
@@ -48,11 +43,10 @@ public class Shooter : MonoBehaviour
     // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
     public void init(float reactionMultiplier, float lifeTime)
     {
-        if (TOWERS.Length == 0)
+        if (TOWERS.Count == 0)
             setTowers();
         setTarget();
 
-        troopColor = getTroopColor(reactionMultiplier);
         rb = GetComponent<Rigidbody>();
         mat = GetComponent<Renderer>().material;
 
@@ -64,7 +58,7 @@ public class Shooter : MonoBehaviour
 
         var color = GameManager.getReactionColor(reactionMultiplier);
         mat.SetColor("Color_D1155CB1", color);
-        bullet.GetComponent<Bullet>().init(reactionMultiplier, lifeTime, this.range * 0.2f, target,
+        bullet.GetComponent<Bullet>().init(reactionMultiplier, this.range * 0.2f, target,
                                             color);
     }
 
@@ -82,15 +76,29 @@ public class Shooter : MonoBehaviour
             }
             attacking = false;
         }
-        else if (!rotating)
+        else if (!rotating && !attacking)
         {
-            stop();
-            setRotationDirection();
-            rotating = true;
+            startRotation();
         }
     }
     private void Update()
     {
+        if (!target)
+        {
+            setTarget();
+        }
+
+        if (finished)
+        {
+            if (!gettingDestroyed)
+            {
+                Destroy(this.gameObject, 5);
+                gettingDestroyed = true;
+            }
+
+            return;
+        }
+
         if (rotating)
         {
             float angle = Vector3.Angle(transform.forward.xz(), target.transform.position.xz() - transform.position.xz());
@@ -108,9 +116,15 @@ public class Shooter : MonoBehaviour
         }
     }
 
+    private void startRotation()
+    {
+        stop();
+        setRotationDirection();
+        rotating = true;
+    }
+
     private void rotate(bool rotateCCW)
     {
-        //transform.Rotate()
         transform.Rotate(Vector3.up, 20f * Time.deltaTime * (rotateCCW ? -1 : 1));
     }
     private void setRotationDirection()
@@ -137,10 +151,16 @@ public class Shooter : MonoBehaviour
     }
     private void setTarget()
     {
+        if (TOWERS.Count == 0)
+        {
+            finished = true;
+            return;
+        }
+
         float minDistance = float.MaxValue;
         int idx = 0;
 
-        for (int i = 0; i < TOWERS.Length; i++)
+        for (int i = 0; i < TOWERS.Count; i++)
         {
             float distance = Vector3.Distance(this.transform.position, TOWERS[i].transform.position);
             if (distance < minDistance)
@@ -151,6 +171,8 @@ public class Shooter : MonoBehaviour
         }
 
         this.target = TOWERS[idx].transform;
+        bullet.GetComponent<Bullet>().target = this.target;
+        attacking = false;
     }
     private void OnDestroy()
     {
@@ -158,20 +180,6 @@ public class Shooter : MonoBehaviour
     }
     private static void setTowers()
     {
-        TOWERS = GameObject.FindGameObjectsWithTag("Tower");
-    }
-    public static TroopColor getTroopColor(float reactionMultiplier)
-    {
-        switch (reactionMultiplier)
-        {
-            case 1f:
-                return TroopColor.WHITE;
-            case 1.25f:
-                return TroopColor.GREEN;
-            case 1.5f:
-                return TroopColor.PURPLE;
-            default:
-                return TroopColor.WHITE;
-        }
+        TOWERS = GameObject.FindGameObjectsWithTag("Tower").ToList();
     }
 }

@@ -4,12 +4,9 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [SerializeField]
-    private Shooter shooter;
     private GameObject parentGo;
-    private Shooter.TroopColor troopColor;
     [SerializeField]
-    private Transform target;
+    public Transform target;
     [SerializeField]
     private float timeSinceAvailable = 0;
     private bool _isAvailable;
@@ -21,8 +18,6 @@ public class Bullet : MonoBehaviour
     [SerializeField]
     private float forceMultiplier;
     private Rigidbody bulletRb;
-    private bool destroyTimerStarted = false;
-    private float lifeTime;
     private bool isAvailable 
     { 
         get 
@@ -35,12 +30,10 @@ public class Bullet : MonoBehaviour
         _isAvailable = true;
         parentGo = this.transform.parent.gameObject;
     }
-    public void init(float reactionMultiplier, float lifeTime, float forceMultiplier, Transform target, Color color)
+    public void init(float reactionMultiplier, float forceMultiplier, Transform target, Color color)
     {
         var scaledReactionMultiplier = reactionMultiplier * GameManager.getDifficultyMultiplier();
 
-        this.troopColor = Shooter.getTroopColor(reactionMultiplier);
-        this.lifeTime = lifeTime;
         this.forceMultiplier = forceMultiplier;
         this.damage = Shooter.BASE_DAMAGE * scaledReactionMultiplier;
         this.target = target;
@@ -56,6 +49,11 @@ public class Bullet : MonoBehaviour
 
         _isAvailable = false;
 
+        shoot();
+    }
+
+    private void shoot()
+    {
         var targetPosWithVerticalOffset = target.position + Vector3.up;
         transform.parent = transform.parent.parent;
         transform.LookAt(targetPosWithVerticalOffset);
@@ -64,32 +62,8 @@ public class Bullet : MonoBehaviour
         var forceDir = (targetPosWithVerticalOffset - transform.position).normalized;
         bulletRb.isKinematic = false;
         bulletRb.AddForce(forceDir * this.forceMultiplier, ForceMode.Impulse);
+    }
 
-        if (!destroyTimerStarted)
-        {
-            startDestroyTimer();
-        }
-    }
-   
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag == "Tower")
-        {
-            collision.gameObject.GetComponent<Tower>().applyDamage(this.damage, this.troopColor);
-            this.GetComponent<Rigidbody>().isKinematic = true;
-            this.transform.parent = parentGo.transform;
-            this.transform.localPosition = Vector3.zero;
-            this.transform.localRotation = Quaternion.identity;
-            this.transform.localScale = Vector3.one;
-            timeSinceAvailable = Time.realtimeSinceStartup;
-            _isAvailable = true;
-        }
-    }
-    private void startDestroyTimer()
-    {
-        destroyTimerStarted = true;
-        Destroy(transform.parent.gameObject, this.lifeTime);
-    }
     private void OnDestroy()
     {
         Destroy(this.bulletMat);

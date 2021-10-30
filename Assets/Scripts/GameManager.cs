@@ -5,20 +5,20 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [SerializeField]
-    private Color purple;
+    private GameObject quitButton = null;
+
+    [SerializeField]
+    private Color purple = new Color();
     private static Color PURPLE;
     [SerializeField]
-    private Color green;
+    private Color green = new Color();
     private static Color GREEN;
     [SerializeField]
-    private Color white;
+    private Color white = new Color();
     private static Color WHITE;
-    [SerializeField]
-    private Color red;
-    private static Color RED;
 
     private const float fixedZ = 1.5f;
-    [SerializeField]
+    
     public static Camera mainCam;
 
     [SerializeField, Range(4, 10)]
@@ -26,16 +26,16 @@ public class GameManager : MonoBehaviour
     private static int difficulty = 4;
 
     [SerializeField]
-    private List<GameObject> referenceButtons;
+    private List<GameObject> referenceButtons = null;
     private List<Color> COLORS;
     private List<int> chosenColorIndices;
     private List<Vector3> BUTTON_POSITIONS;
     [SerializeField]
-    private GameObject blurredPanel;
+    private GameObject blurredPanel = null;
 
     [SerializeField]
     public bool spawnAvailable;
-    public List<ReflexButton> reflexButtons { get; private set; }
+    public List<ReflexButton> reflexButtons { get; private set; } = null;
     public bool reflexPhase { get; private set; }
     public float phaseStartTime { get; private set; }
     public float reactionMultiplier
@@ -51,7 +51,7 @@ public class GameManager : MonoBehaviour
                 return 1f;
         }
     }
-    public List<GameObject> activeTroops;
+    public List<GameObject> activeTroops = null;
 
     private void Start()
     {
@@ -76,6 +76,7 @@ public class GameManager : MonoBehaviour
     public void startReflexPhase()
     {
         //blurredPanel.SetActive(true);
+        quitButton.SetActive(false);
         setReferenceButtons();
         setButtons();
         this.reflexPhase = true;
@@ -86,6 +87,8 @@ public class GameManager : MonoBehaviour
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
         blurredPanel.SetActive(false);
+        quitButton.SetActive(true);
+
     }
     public bool isFinalButton(int buttonIdx)
     {

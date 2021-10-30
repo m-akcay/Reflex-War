@@ -4,14 +4,11 @@ using UnityEngine;
 public class Tower_multi : MonoBehaviourPun
 {
     [SerializeField]
-    private float remainingHealth;
-    
-    [SerializeField]
-    private GameObject healthBar;
+    private GameObject healthBar = null;
     private Material healthBarMat;
 
     [SerializeField]
-    private GameObject winnerIndicator;
+    private GameObject winnerIndicator = null;
     private Material winnerIndicatorMat;
 
     [SerializeField]

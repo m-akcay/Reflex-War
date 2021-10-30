@@ -8,7 +8,7 @@ public class Shooter_multi : MonoBehaviourPun
     public static Color EnemyColor = new Color(1f, 0.5f, 0f, 1f);
 
     [SerializeField]
-    private LayerMask _enemyMask;
+    private LayerMask _enemyMask = 0;
     public static LayerMask EnemyMask;
 
     public const int EnemyLayer = 13;
@@ -29,10 +29,10 @@ public class Shooter_multi : MonoBehaviourPun
     [SerializeField]
     private float distance;
     [SerializeField]
-    private Rigidbody[] wheels;
+    private Rigidbody[] wheels = null;
     private Rigidbody rb;
     [SerializeField]
-    private GameObject bullet;
+    private GameObject bullet = null;
 
     private Material mat;
     private Material[] wheelMaterials;

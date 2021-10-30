@@ -6,40 +6,29 @@ using UnityEngine.UI;
 public class Tower : MonoBehaviour
 {
     [SerializeField]
+    private float totalHealth = 0;
+    [SerializeField]
     private float remainingHealth;
     [SerializeField]
-    private GameObject healthBar;
+    private GameObject healthBar = null;
     private Material healthBarMat;
 
-    [SerializeField]
-    private float damageTakenFromPlayer;
-    [SerializeField]
-    private float damageTakenFromEnemy;
     void Start()
     {
+        remainingHealth = totalHealth;
         healthBar.transform.LookAt(Camera.main.transform);
         healthBarMat = healthBar.GetComponent<SpriteRenderer>().material;
-        damageTakenFromEnemy = 0;
-        damageTakenFromPlayer = 0;
     }
-    public void applyDamage(float damage, Shooter.TroopColor troopColor)
+    public void applyDamage(float damage)
     {
-        if (troopColor == Shooter.TroopColor.GREEN || troopColor == Shooter.TroopColor.WHITE)
+        remainingHealth -= damage;
+        if (remainingHealth < 0)
         {
-            damageTakenFromEnemy += damage;
-            if (damageTakenFromPlayer > damage)
-                damageTakenFromPlayer -= damage / 2;
-        }
-        else if (troopColor == Shooter.TroopColor.PURPLE)
-        {
-            damageTakenFromPlayer += damage;
-            if (damageTakenFromEnemy > damage)
-                damageTakenFromEnemy -= damage / 2;
+            Shooter.TOWERS.Remove(this.gameObject);
+            Destroy(this.gameObject);
         }
 
-        //Debug.Log(string.Format("fromPlayer->{0}   fromEnemy->{1}", damageTakenFromPlayer, damageTakenFromEnemy));
-        var totalDamage = damageTakenFromEnemy + damageTakenFromPlayer;
-        healthBarMat.SetFloat("_SplitPos", damageTakenFromPlayer / totalDamage);
+        healthBarMat.SetFloat("_SplitPos", remainingHealth / totalHealth);
     }
 
     private void OnDestroy()

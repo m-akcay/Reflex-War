@@ -20,35 +20,31 @@ public class InputHandler : MonoBehaviour
     }
 
     [SerializeField]
-    private Color purple;
+    private Color white = new Color();
     [SerializeField]
-    private Color green;
-    [SerializeField]
-    private Color white;
-    [SerializeField]
-    private Color red;
+    private Color red = new Color();
 
     [SerializeField]
-    private GameManager gm;
+    private GameManager gm = null;
     [SerializeField]
-    private Camera mainCam;
+    private Camera mainCam = null;
     private bool drawing = false;
     [SerializeField]
     private int nextButtonIdx = 0;
     [SerializeField]
-    private GameObject spawnIndicator;
+    private GameObject spawnIndicator = null;
     private Material spawnMaterial;
     [SerializeField]
-    private LayerMask mask;
+    private LayerMask mask = 0;
     [SerializeField]
-    private LayerMask groundMask;
+    private LayerMask groundMask = 0;
     private Material groundMat;
 
     private SpawnLimits SPAWN_LIMITS;
     private float reactionMultiplier;
     private bool spawnIndicatorIsRed;
     [SerializeField]
-    private Color spawnColor;
+    private Color spawnColor = new Color();
     private Vector3 lastAvailableSpawnPos;
 
     // max scaleX is 23 (full width)

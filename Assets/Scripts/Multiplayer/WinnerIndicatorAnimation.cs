@@ -6,7 +6,7 @@ using UnityEngine;
 public class WinnerIndicatorAnimation : MonoBehaviour
 {
     [SerializeField]
-    private Transform winnerIndicator_target;
+    private Transform winnerIndicator_target = null;
     private bool waitIsOver = false;
     private bool waiting = false;
     private float initialDistance;
