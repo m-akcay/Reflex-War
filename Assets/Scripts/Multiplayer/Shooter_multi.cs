@@ -13,7 +13,6 @@ public class Shooter_multi : MonoBehaviourPun
 
     public const int EnemyLayer = 13;
 
-    private static GameObject[] TOWERS = new GameObject[] { };
     public const float BASE_FIRE_RATE = 1.5f;
     public const float BASE_DAMAGE = 30;
     public const float BASE_SPEED = 0.4f;
@@ -52,8 +51,6 @@ public class Shooter_multi : MonoBehaviourPun
     // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
     public void init(float reactionMultiplier, float lifeTime)
     {
-        if (TOWERS.Length == 0)
-            setTowers();
         setTarget();
 
         rb = GetComponent<Rigidbody>();
@@ -184,9 +181,9 @@ public class Shooter_multi : MonoBehaviourPun
         float minDistance = float.MaxValue;
         int idx = 0;
 
-        for (int i = 0; i < TOWERS.Length; i++)
+        for (int i = 0; i < GameManager_multi.TOWERS.Length; i++)
         {
-            float distance = Vector3.Distance(this.transform.position, TOWERS[i].transform.position);
+            float distance = Vector3.Distance(this.transform.position, GameManager_multi.TOWERS[i].transform.position);
             if (distance < minDistance)
             {
                 minDistance = distance;
@@ -194,7 +191,7 @@ public class Shooter_multi : MonoBehaviourPun
             }
         }
 
-        this.target = TOWERS[idx].transform;
+        this.target = GameManager_multi.TOWERS[idx].transform;
         bullet.GetComponent<Bullet_multi>().target = this.target;
     }
     private void OnDestroy()
@@ -209,10 +206,6 @@ public class Shooter_multi : MonoBehaviourPun
 
             Destroy(gunMat);
         }
-    }
-    private static void setTowers()
-    {
-        TOWERS = GameObject.FindGameObjectsWithTag("Tower");
     }
 
     [PunRPC]

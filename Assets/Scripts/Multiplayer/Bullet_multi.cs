@@ -84,20 +84,31 @@ public class Bullet_multi : MonoBehaviourPun
         bulletRb.AddForce(forceDir * this.forceMultiplier, ForceMode.Impulse);
     }
 
+    private void reload()
+    {
+        this.GetComponent<Rigidbody>().isKinematic = true;
+        this.transform.parent = parentGo.transform;
+        this.transform.localPosition = Vector3.zero;
+        this.transform.localRotation = Quaternion.identity;
+        this.transform.localScale = Vector3.one;
+        timeSinceAvailable = Time.realtimeSinceStartup;
+        if (photonView.IsMine)
+            _isAvailable = true;
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
         if (collision.gameObject.tag == "Tower")
         {
             collision.gameObject.GetComponent<Tower_multi>().applyDamage(this.damage, this.gameObject.layer);
-            this.GetComponent<Rigidbody>().isKinematic = true;
-            this.transform.parent = parentGo.transform;
-            this.transform.localPosition = Vector3.zero;
-            this.transform.localRotation = Quaternion.identity;
-            this.transform.localScale = Vector3.one;
-            timeSinceAvailable = Time.realtimeSinceStartup;
-            if (photonView.IsMine)
-                _isAvailable = true;
+            reload();   
         }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.name == "Reloader")
+            reload();
     }
 
     [PunRPC]

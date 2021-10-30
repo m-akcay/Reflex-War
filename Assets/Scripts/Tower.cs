@@ -24,7 +24,7 @@ public class Tower : MonoBehaviour
         remainingHealth -= damage;
         if (remainingHealth < 0)
         {
-            Shooter.TOWERS.Remove(this.gameObject);
+            GameManager.TOWERS.Remove(this.gameObject);
             Destroy(this.gameObject);
         }
 

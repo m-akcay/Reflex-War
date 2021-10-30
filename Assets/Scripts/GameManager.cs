@@ -1,9 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    public static List<GameObject> TOWERS = new List<GameObject>();
+
     [SerializeField]
     private GameObject quitButton = null;
 
@@ -32,6 +36,8 @@ public class GameManager : MonoBehaviour
     private List<Vector3> BUTTON_POSITIONS;
     [SerializeField]
     private GameObject blurredPanel = null;
+    private GameObject blackBackground = null;
+
 
     [SerializeField]
     public bool spawnAvailable;
@@ -53,8 +59,20 @@ public class GameManager : MonoBehaviour
     }
     public List<GameObject> activeTroops = null;
 
+    [SerializeField]
+    private float remainingTime;
+    [SerializeField]
+    private TextMeshProUGUI remainingTimeText = null;
+    private float referenceStartTime = -1;
+    private float TimeLimit_seconds = 300f;
+
     private void Start()
     {
+        setTowers();
+        difficulty = 4;
+
+        blackBackground = GameObject.Find("BlackBackground");
+
         WHITE = white;
         GREEN = green;
         PURPLE = purple;
@@ -71,8 +89,25 @@ public class GameManager : MonoBehaviour
         createPositionArray();
         createColorArray();
 
+        disableBlur();
+
         StartCoroutine(enableReflexPhase());
     }
+
+    private void Update()
+    {
+        if (referenceStartTime < 0 && activeTroops.Count > 0)
+        {
+            referenceStartTime = Time.timeSinceLevelLoad;
+            StartCoroutine(updateTimer());
+        }
+
+        if (remainingTime < 3f && this.reflexPhase)
+        {
+            finishReflexPhase();
+        }
+    }
+
     public void startReflexPhase()
     {
         //blurredPanel.SetActive(true);
@@ -86,9 +121,8 @@ public class GameManager : MonoBehaviour
         this.reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
-        blurredPanel.SetActive(false);
         quitButton.SetActive(true);
-
+        disableBlur();
     }
     public bool isFinalButton(int buttonIdx)
     {
@@ -105,16 +139,53 @@ public class GameManager : MonoBehaviour
             spawnAvailable = false;
             startReflexPhase();
             phaseStartTime = Time.realtimeSinceStartup;
-            blurredPanel.SetActive(true);
+            enableBlur();
             yield return new WaitForSeconds(waitTime * 2);
             if (reflexPhase)
                 finishReflexPhase();
         }
     }
 
+    private IEnumerator updateTimer()
+    {
+        remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
+
+        while (remainingTime > 0f)
+        {
+            remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
+            remainingTimeText.text = string.Format("{0:0}:{1:00}", Mathf.FloorToInt(remainingTime / 60), Mathf.FloorToInt(remainingTime) % 60);
+            yield return new WaitForSecondsRealtime(1);
+        }
+
+        remainingTimeText.text = string.Format("{0:0}:{1:00}", 0, 0);
+        finishGame();
+    }
+
+    private void enableBlur()
+    {
+        blurredPanel.SetActive(true);
+        blackBackground.SetActive(true);
+    }
+    private void disableBlur()
+    {
+        blurredPanel.SetActive(false);
+        blackBackground.SetActive(false);
+    }
+
+    private void finishGame()
+    {
+        GameObject.FindGameObjectsWithTag("Troop")
+            .ToList()
+            .ForEach(shooter => shooter.GetComponent<Shooter_multi>().disable());
+
+        StopAllCoroutines();
+
+        QuitHandler.QuitAvailable = true;
+    }
+
     public void setReferenceButtons()
     {
-        float buttonSpacing = Screen.width * 0.09f;
+        float buttonSpacing = Screen.width * 0.07f;
         float startPosX = (Screen.width - (buttonSpacing * (this.numOfActiveButtons - 1))) / 2;
         var startPos = new Vector3(startPosX, Screen.height * 0.95f, fixedZ);
 
@@ -189,12 +260,13 @@ public class GameManager : MonoBehaviour
     private void createPositionArray()
     {
         this.BUTTON_POSITIONS = new List<Vector3>();
-        // 16:9 screen assumed
-        int aspectWidth = 16;
-        int aspectHeight = 9;
+        
+        int aspectWidth = 12;
+        int aspectHeight = 6;
+        //aspectWidth = (int)((float)aspectHeight * (Screen.width / Screen.height));
 
         var offset = new Vector2((Screen.width * 0.95f) / aspectWidth,
-                                (Screen.height * 0.9f) / aspectHeight) + new Vector2(0.1f, 0.05f);
+                                (Screen.height * 0.9f) / aspectHeight) + new Vector2(0.25f, 0.25f);
         var startPos = new Vector2(Screen.width * 0.05f, Screen.height * 0.05f);
         for (int i = 0; i < aspectWidth; i++)
         {
@@ -208,6 +280,7 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+    
     public static void increaseDifficulty()
     {
         difficulty++;
@@ -234,5 +307,14 @@ public class GameManager : MonoBehaviour
                 return WHITE;
         }
     }
+    private static void setTowers()
+    {
+        TOWERS = GameObject.FindGameObjectsWithTag("Tower").ToList();
+    }
 
+    private void OnDestroy()
+    {
+        //activeTroops.Clear();
+        //TOWERS.Clear();
+    }
 }

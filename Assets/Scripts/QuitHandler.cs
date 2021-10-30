@@ -19,8 +19,8 @@ public class QuitHandler : MonoBehaviour
     {
         if (QuitAvailable)
         {
-            if (!quitButton_touch.activeInHierarchy && !quitPanel.activeInHierarchy)
-                quitButton_touch.SetActive(true);
+            //if (!quitButton_touch.activeInHierarchy && !quitPanel.activeInHierarchy)
+            //    quitButton_touch.SetActive(true);
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {

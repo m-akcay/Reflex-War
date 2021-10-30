@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class Shooter : MonoBehaviour
 {
-    public static List<GameObject> TOWERS = new List<GameObject>();
     public const float BASE_FIRE_RATE = 1.5f;
     public const float BASE_DAMAGE = 30;
     public const float BASE_SPEED = 0.4f;
@@ -43,8 +42,6 @@ public class Shooter : MonoBehaviour
     // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
     public void init(float reactionMultiplier, float lifeTime)
     {
-        if (TOWERS.Count == 0)
-            setTowers();
         setTarget();
 
         rb = GetComponent<Rigidbody>();
@@ -64,6 +61,11 @@ public class Shooter : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!target)
+        {
+            return;
+        }
+
         Vector3 posDiff = (target.position - transform.position);
         Vector3 moveDirection = posDiff.normalized;
         distance = posDiff.magnitude;
@@ -99,9 +101,10 @@ public class Shooter : MonoBehaviour
             return;
         }
 
+        float angle = Vector3.Angle(transform.forward.xz(), target.transform.position.xz() - transform.position.xz());
+
         if (rotating)
         {
-            float angle = Vector3.Angle(transform.forward.xz(), target.transform.position.xz() - transform.position.xz());
             if (angle < 5f)
             {
                 rotating = false;
@@ -112,6 +115,11 @@ public class Shooter : MonoBehaviour
         }
         else if (attacking)
         {
+            if (angle > 5f)
+            {
+                startRotation();
+                return;
+            }
             bullet.GetComponent<Bullet>().fire();
         }
     }
@@ -151,7 +159,7 @@ public class Shooter : MonoBehaviour
     }
     private void setTarget()
     {
-        if (TOWERS.Count == 0)
+        if (GameManager.TOWERS.Count == 0)
         {
             finished = true;
             return;
@@ -160,9 +168,9 @@ public class Shooter : MonoBehaviour
         float minDistance = float.MaxValue;
         int idx = 0;
 
-        for (int i = 0; i < TOWERS.Count; i++)
+        for (int i = 0; i < GameManager.TOWERS.Count; i++)
         {
-            float distance = Vector3.Distance(this.transform.position, TOWERS[i].transform.position);
+            float distance = Vector3.Distance(this.transform.position, GameManager.TOWERS[i].transform.position);
             if (distance < minDistance)
             {
                 minDistance = distance;
@@ -170,16 +178,12 @@ public class Shooter : MonoBehaviour
             }
         }
 
-        this.target = TOWERS[idx].transform;
+        this.target = GameManager.TOWERS[idx].transform;
         bullet.GetComponent<Bullet>().target = this.target;
         attacking = false;
     }
     private void OnDestroy()
     {
         Destroy(this.mat);
-    }
-    private static void setTowers()
-    {
-        TOWERS = GameObject.FindGameObjectsWithTag("Tower").ToList();
     }
 }

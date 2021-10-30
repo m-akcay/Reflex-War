@@ -144,6 +144,22 @@ public class InputHandler_multi : MonoBehaviour
             gm.reflexButtons[nextButtonIdx].hideLine();
         }
     }
+    private void spawnProcedure()
+    {
+        Vector3 spawnPos;
+        bool l_spawnPositionAvailable = spawnPositionAvailable(Input.mousePosition, out spawnPos);
+        setUpSpawner(l_spawnPositionAvailable, spawnPos);
+
+        if (l_spawnPositionAvailable)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                spawnTroop();
+            }
+        }
+    }
+
+#if UNITY_ANDROID
     private void getInput_mobile()
     {
         if (Input.touchCount > 0)
@@ -180,22 +196,7 @@ public class InputHandler_multi : MonoBehaviour
             gm.reflexButtons[nextButtonIdx].hideLine();
         }
     }
-    private void spawnProcedure()
-    {
-        Vector3 spawnPos;
-        bool l_spawnPositionAvailable = spawnPositionAvailable(Input.mousePosition, out spawnPos);
-        setUpSpawner(l_spawnPositionAvailable, spawnPos);
 
-        if (l_spawnPositionAvailable)
-        {
-            if (Input.GetMouseButtonDown(0))
-            {
-                spawnTroop();
-            }
-        }
-    }
-
-#if UNITY_ANDROID
     private float touchPhaseBeginTime = 0;
     private Vector2 touchPhaseStartPos;
     private void spawnProcedure_mobile()
@@ -219,7 +220,7 @@ public class InputHandler_multi : MonoBehaviour
             {
                 setUpSpawner(l_spawnPositionAvailable, spawnPos);
 
-                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 0.05f && timeDiff > 0.5f)
+                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 5f && timeDiff > 0.3f)
                 {
                     spawnTroop();
                 }

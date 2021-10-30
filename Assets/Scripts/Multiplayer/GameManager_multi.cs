@@ -10,6 +10,7 @@ using Random = UnityEngine.Random;
 
 public class GameManager_multi : MonoBehaviourPun
 {
+    public static GameObject[] TOWERS = new GameObject[] { };
     public static bool GameOver = false;
     [SerializeField] private GameObject enemyNamePlate = null;
     private bool reflexStarted = false;
@@ -76,6 +77,8 @@ public class GameManager_multi : MonoBehaviourPun
     {
         //PhotonNetwork.PlayerListOthers.ToList().ForEach(player => enemyNick = player.NickName);
         enemyNamePlate.GetComponentInChildren<TextMeshProUGUI>().text = PhotonNetwork.PlayerListOthers[0].NickName;
+        setTowers();
+        difficulty = 4;
 
         WHITE = white;
         GREEN = green;
@@ -268,12 +271,13 @@ public class GameManager_multi : MonoBehaviourPun
     private void createPositionArray()
     {
         this.BUTTON_POSITIONS = new List<Vector3>();
-        // 16:9 screen assumed
-        int aspectWidth = 16;
-        int aspectHeight = 9;
+
+        int aspectWidth = 12;
+        int aspectHeight = 6;
+        //aspectWidth = (int)((float)aspectHeight * (Screen.width / Screen.height));
 
         var offset = new Vector2((Screen.width * 0.95f) / aspectWidth,
-                                (Screen.height * 0.9f) / aspectHeight) + new Vector2(0.1f, 0.05f);
+                                (Screen.height * 0.9f) / aspectHeight) + new Vector2(0.25f, 0.25f);
         var startPos = new Vector2(Screen.width * 0.05f, Screen.height * 0.05f);
         for (int i = 0; i < aspectWidth; i++)
         {
@@ -406,4 +410,10 @@ public class GameManager_multi : MonoBehaviourPun
 
         QuitHandler.QuitAvailable = true;
     }
+
+    private static void setTowers()
+    {
+        TOWERS = GameObject.FindGameObjectsWithTag("Tower");
+    }
+
 }

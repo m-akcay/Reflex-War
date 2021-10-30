@@ -1,9 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class InputHandler : MonoBehaviour
 {
+    [SerializeField] private Text debugText = null;
     private struct SpawnLimits
     {
         public float right;
@@ -67,70 +69,164 @@ public class InputHandler : MonoBehaviour
         spawnColor = white;
         lastAvailableSpawnPos = new Vector3();
         groundMat = GameObject.Find("Ground").GetComponent<Renderer>().material;
+        groundMat.SetInt("Boolean_D1E5A8E9", 1);
     }
 
     void Update()
     {
         if (gm.reflexPhase)
         {
-            if (Input.GetMouseButton(0))
-            {
-                Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
-                RaycastHit outHit;
-                bool hit = Physics.Raycast(ray, out outHit, 3, mask);
-                var buttonShouldBeHit = gm.reflexButtons[nextButtonIdx].buttonGo;
-                if (hit && outHit.collider.gameObject == buttonShouldBeHit)
-                {
-                    drawing = true;
-                    if (nextButtonIdx > 0)
-                    {
-                        var finalPos = buttonShouldBeHit.transform.position;
-                        gm.reflexButtons[nextButtonIdx - 1].finalizeLine(finalPos);
-                        if (gm.isFinalButton(nextButtonIdx))
-                        {
-                            successfulReflexPhase();
-                            return;
-                        }
-                    }
-                    nextButtonIdx++;
-                }
-
-                if (drawing)
-                {
-                    gm.reflexButtons[nextButtonIdx - 1].drawLine();
-                }
-            }
-            else if (drawing && Input.GetMouseButtonUp(0))
-            {
-                drawing = false;
-                nextButtonIdx--;
-                gm.reflexButtons[nextButtonIdx].hideLine();
-            }
+#if UNITY_EDITOR || UNITY_STANDALONE
+            getInput();
+#elif UNITY_ANDROID
+            getInput_mobile();
+#endif
         }
         else
         {
             resetVariables();
+
             if (gm.spawnAvailable)
             {
-                Vector3 spawnPos;
-                bool l_spawnPositionAvailable = spawnPositionAvailable(Input.mousePosition, out spawnPos);
-                setUpSpawner(l_spawnPositionAvailable, spawnPos);
-
-                if (l_spawnPositionAvailable)
-                {
-                    if (Input.GetMouseButtonDown(0))
-                    {
-                        spawnTroop();
-                    }
-                }
+#if UNITY_EDITOR || UNITY_STANDALONE
+                spawnProcedure();
+#elif UNITY_ANDROID
+                spawnProcedure_mobile();
+#endif
             }
             else
             {
-                groundMat.SetInt("GreenEnabled", 0);
+                groundMat.SetInt("Boolean_D1E5A8E9", 0);
                 spawnIndicator.GetComponent<Renderer>().enabled = false;
             }
         }
     }
+
+    private void getInput()
+    {
+        if (Input.GetMouseButton(0))
+        {
+            Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
+            RaycastHit outHit;
+            bool hit = Physics.Raycast(ray, out outHit, 3, mask);
+            var buttonShouldBeHit = gm.reflexButtons[nextButtonIdx].buttonGo;
+            if (hit && outHit.collider.gameObject == buttonShouldBeHit)
+            {
+                drawing = true;
+                if (nextButtonIdx > 0)
+                {
+                    var finalPos = buttonShouldBeHit.transform.position;
+                    gm.reflexButtons[nextButtonIdx - 1].finalizeLine(finalPos);
+                    if (gm.isFinalButton(nextButtonIdx))
+                    {
+                        successfulReflexPhase();
+                        return;
+                    }
+                }
+                nextButtonIdx++;
+            }
+
+            if (drawing)
+            {
+                gm.reflexButtons[nextButtonIdx - 1].drawLine();
+            }
+        }
+        else if (drawing && Input.GetMouseButtonUp(0))
+        {
+            drawing = false;
+            nextButtonIdx--;
+            gm.reflexButtons[nextButtonIdx].hideLine();
+        }
+    }
+
+    private void spawnProcedure()
+    {
+        Vector3 spawnPos;
+        bool l_spawnPositionAvailable = spawnPositionAvailable(Input.mousePosition, out spawnPos);
+        setUpSpawner(l_spawnPositionAvailable, spawnPos);
+
+        if (l_spawnPositionAvailable)
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                spawnTroop();
+            }
+        }
+    }
+
+#if UNITY_ANDROID
+    private float touchPhaseBeginTime = 0;
+    private Vector2 touchPhaseStartPos;
+    private void getInput_mobile()
+    {
+        if (Input.touchCount > 0)
+        {
+            Ray ray = mainCam.ScreenPointToRay(Input.GetTouch(0).position);
+            RaycastHit outHit;
+            bool hit = Physics.Raycast(ray, out outHit, 3, mask);
+            var buttonShouldBeHit = gm.reflexButtons[nextButtonIdx].buttonGo;
+            if (hit && outHit.collider.gameObject == buttonShouldBeHit)
+            {
+                drawing = true;
+                if (nextButtonIdx > 0)
+                {
+                    var finalPos = buttonShouldBeHit.transform.position;
+                    gm.reflexButtons[nextButtonIdx - 1].finalizeLine(finalPos);
+                    if (gm.isFinalButton(nextButtonIdx))
+                    {
+                        successfulReflexPhase();
+                        return;
+                    }
+                }
+                nextButtonIdx++;
+            }
+
+            if (drawing)
+            {
+                gm.reflexButtons[nextButtonIdx - 1].drawLine();
+            }
+        }
+        else if (drawing && Input.GetTouch(0).phase == TouchPhase.Ended)
+        {
+            drawing = false;
+            nextButtonIdx--;
+            gm.reflexButtons[nextButtonIdx].hideLine();
+        }
+    }
+    private void spawnProcedure_mobile()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            Vector3 spawnPos;
+            bool l_spawnPositionAvailable = spawnPositionAvailable(touch.position, out spawnPos);
+            float timeDiff = Time.realtimeSinceStartup - touchPhaseBeginTime;
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                touchPhaseBeginTime = Time.realtimeSinceStartup;
+                touchPhaseStartPos = touch.position;
+            }
+            else if ((touch.phase == TouchPhase.Stationary || touch.phase == TouchPhase.Moved)
+                    && timeDiff < 2.5f)
+            // timeDiff condition is added to prevent spawning immediately after finishing reflex phase by mistake
+            {
+                setUpSpawner(l_spawnPositionAvailable, spawnPos);
+
+                //debugText.text = $"touchPhaseStartPos -> {touchPhaseStartPos}\n" +
+                //    $"touchPos    -> {touch.position}\n" +
+                //    $"posDiff     -> {Vector2.Distance(touch.position, touchPhaseStartPos)}" +
+                //    $"timeDiff -> {timeDiff}";
+
+                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 5f && timeDiff > 0.3f)
+                {
+                    spawnTroop();
+                }
+            }
+        }
+    }
+#endif
 
     private bool spawnPositionAvailable(Vector3 mousePos, out Vector3 pos)
     {
