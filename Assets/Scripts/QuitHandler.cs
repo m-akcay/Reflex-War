@@ -10,6 +10,11 @@ public class QuitHandler : MonoBehaviour
     [SerializeField] private GameObject quitButton_touch = null;
     public static bool QuitAvailable = true;
 
+    [SerializeField]
+    private GameManager gm = null;
+
+    [SerializeField]
+    private GameManager_multi gm_multi = null;
     private void Start()
     {
         quitPanel.SetActive(false);
@@ -19,8 +24,10 @@ public class QuitHandler : MonoBehaviour
     {
         if (QuitAvailable)
         {
-            //if (!quitButton_touch.activeInHierarchy && !quitPanel.activeInHierarchy)
-            //    quitButton_touch.SetActive(true);
+            if (gm && !gm.reflexPhase)
+                quitButton_touch.SetActive(true);
+            else if (gm_multi && !gm_multi)
+                quitButton_touch.SetActive(true);
 
             if (Input.GetKeyDown(KeyCode.Escape))
             {

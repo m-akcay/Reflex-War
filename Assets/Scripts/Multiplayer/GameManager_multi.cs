@@ -58,9 +58,9 @@ public class GameManager_multi : MonoBehaviourPun
         get
         {
             float reactionTime = Time.realtimeSinceStartup - phaseStartTime;
-            if (reactionTime < numOfActiveButtons)
+            if (reactionTime < numOfActiveButtons * 0.9f)
                 return 1.5f;
-            else if (reactionTime < numOfActiveButtons * 1.5f)
+            else if (reactionTime < numOfActiveButtons * 1.25f)
                 return 1.25f;
             else
                 return 1f;
@@ -117,7 +117,7 @@ public class GameManager_multi : MonoBehaviourPun
 
         setReferenceButtons();
         setButtons();
-        this.reflexPhase = true;
+        reflexPhase = true;
         photonView.RPC("setReflexPhase", RpcTarget.All, true);
         photonView.RPC("setUniversalVars", RpcTarget.All, difficulty, chosenColorIndices.ToArray(), randPosIdx.ToArray());
 
@@ -131,7 +131,7 @@ public class GameManager_multi : MonoBehaviourPun
     }
     public void finishReflexPhase()
     {
-        this.reflexPhase = false;
+        reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
         disableBlur();
@@ -148,13 +148,13 @@ public class GameManager_multi : MonoBehaviourPun
             if (difficulty < 11)
                 this.numOfActiveButtons = difficulty;
             float waitTime = this.numOfActiveButtons;
-            yield return new WaitForSeconds(waitTime);
+            yield return new WaitForSeconds(2);
             spawnAvailable = false;
             startReflexPhase();
             difficulty++;
             phaseStartTime = Time.realtimeSinceStartup;
             enableBlur();
-            yield return new WaitForSeconds(waitTime * 2);
+            yield return new WaitForSeconds(waitTime * 1.35f);
             if (reflexPhase)
                 finishReflexPhase();
         }
@@ -163,7 +163,7 @@ public class GameManager_multi : MonoBehaviourPun
     {
         if (difficulty < 11)
             this.numOfActiveButtons = difficulty;
-        float waitTime = this.numOfActiveButtons * 2;
+        float waitTime = this.numOfActiveButtons * 1.5f;
         spawnAvailable = false;
         startReflexPhase_client();
         phaseStartTime = Time.realtimeSinceStartup;
@@ -343,7 +343,7 @@ public class GameManager_multi : MonoBehaviourPun
     [PunRPC]
     private void setReflexPhase(bool reflexPhase)
     {
-        this.reflexPhase = reflexPhase;
+        reflexPhase = reflexPhase;
     }
     [PunRPC]
     private void setUniversalVars(int difficulty, int[] chosenColorIndices, int[] randPosIdx)
@@ -360,7 +360,7 @@ public class GameManager_multi : MonoBehaviourPun
         //    Time.timeScale = 0;
         //    StopAllCoroutines();
         //}
-        if (remainingTime < 3f && this.reflexPhase)
+        if (remainingTime < 3f && reflexPhase)
         {
             finishReflexPhase();
         }    

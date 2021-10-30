@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    private const string BestScoreKey = "BestScore";
     public static List<GameObject> TOWERS = new List<GameObject>();
 
     [SerializeField]
@@ -49,9 +50,9 @@ public class GameManager : MonoBehaviour
         get
         {
             float reactionTime = Time.realtimeSinceStartup - phaseStartTime;
-            if (reactionTime < numOfActiveButtons)
+            if (reactionTime < numOfActiveButtons * 0.9f)
                 return 1.5f;
-            else if (reactionTime < numOfActiveButtons * 1.5f)
+            else if (reactionTime < numOfActiveButtons * 1.25f)
                 return 1.25f;
             else
                 return 1f;
@@ -63,6 +64,9 @@ public class GameManager : MonoBehaviour
     private float remainingTime;
     [SerializeField]
     private TextMeshProUGUI remainingTimeText = null;
+    [SerializeField]
+    private TextMeshProUGUI highScoreText = null;
+
     private float referenceStartTime = -1;
     private float TimeLimit_seconds = 300f;
 
@@ -102,7 +106,7 @@ public class GameManager : MonoBehaviour
             StartCoroutine(updateTimer());
         }
 
-        if (remainingTime < 3f && this.reflexPhase)
+        if (remainingTime < 3f && reflexPhase)
         {
             finishReflexPhase();
         }
@@ -114,11 +118,11 @@ public class GameManager : MonoBehaviour
         quitButton.SetActive(false);
         setReferenceButtons();
         setButtons();
-        this.reflexPhase = true;
+        reflexPhase = true;
     }
     public void finishReflexPhase()
     {
-        this.reflexPhase = false;
+        reflexPhase = false;
         reflexButtons.ForEach(btn => btn.deactivate());
         referenceButtons.ForEach(btn => btn.SetActive(false));
         quitButton.SetActive(true);
@@ -135,12 +139,13 @@ public class GameManager : MonoBehaviour
             if (difficulty < 11)
                 this.numOfActiveButtons = difficulty;
             float waitTime = this.numOfActiveButtons;
-            yield return new WaitForSeconds(waitTime);
+            yield return new WaitForSeconds(2);
             spawnAvailable = false;
             startReflexPhase();
+            difficulty++;
             phaseStartTime = Time.realtimeSinceStartup;
             enableBlur();
-            yield return new WaitForSeconds(waitTime * 2);
+            yield return new WaitForSeconds(waitTime * 1.35f);
             if (reflexPhase)
                 finishReflexPhase();
         }
@@ -150,7 +155,7 @@ public class GameManager : MonoBehaviour
     {
         remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
 
-        while (remainingTime > 0f)
+        while (remainingTime > 0f && TOWERS.Count > 0)
         {
             remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
             remainingTimeText.text = string.Format("{0:0}:{1:00}", Mathf.FloorToInt(remainingTime / 60), Mathf.FloorToInt(remainingTime) % 60);
@@ -174,13 +179,33 @@ public class GameManager : MonoBehaviour
 
     private void finishGame()
     {
-        GameObject.FindGameObjectsWithTag("Troop")
-            .ToList()
-            .ForEach(shooter => shooter.GetComponent<Shooter_multi>().disable());
-
-        StopAllCoroutines();
-
         QuitHandler.QuitAvailable = true;
+
+        highScoreText.gameObject.SetActive(true);
+
+        int i_remainingTime = Mathf.FloorToInt(remainingTime);
+
+        if (PlayerPrefs.HasKey(BestScoreKey))
+        {
+            int bestScore = PlayerPrefs.GetInt(BestScoreKey);
+
+            if (remainingTime > bestScore)
+            {
+                PlayerPrefs.SetInt(BestScoreKey, i_remainingTime);
+                highScoreText.text = $"New High Score -> {i_remainingTime}";
+            }
+            else
+                highScoreText.text = $"Score -> {i_remainingTime}\n" +
+                    $"Current High Score -> {bestScore}";
+        }
+        else
+        {
+            PlayerPrefs.SetInt(BestScoreKey, i_remainingTime);
+            highScoreText.text = $"New High Score -> {i_remainingTime}";
+        }
+
+        finishReflexPhase();
+        StopAllCoroutines();
     }
 
     public void setReferenceButtons()

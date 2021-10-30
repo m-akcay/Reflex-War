@@ -10,7 +10,9 @@ public class PlayerNameInput : MonoBehaviour
     [SerializeField] private TMP_InputField nameInput = null;
     [SerializeField] private TMP_Text currentName = null;
     [SerializeField] private Button continueButton = null;
+    [SerializeField] private GameObject backButton = null;
     [SerializeField] private List<GameObject> uiButtons;
+    [SerializeField] private GameObject settingsPanel = null;
     private void Awake()
     {
         //PlayerPrefs.DeleteAll();
@@ -19,7 +21,7 @@ public class PlayerNameInput : MonoBehaviour
         if (PlayerPrefs.HasKey(PlayerNameKey))
         {
             //disableNameInput();
-            GameObject.Find("SettingsPanel").SetActive(false);
+            settingsPanel.SetActive(false);
             PhotonNetwork.NickName = PlayerPrefs.GetString(PlayerNameKey);
         }
         else
@@ -38,14 +40,16 @@ public class PlayerNameInput : MonoBehaviour
         nameInput.gameObject.SetActive(true);
         if (PlayerPrefs.HasKey(PlayerNameKey))
         {
-            nameInput.text = PlayerPrefs.GetString(PlayerNameKey);
-            currentName.text = $"Current username: {nameInput.text}";
+            nameInput.placeholder.GetComponent<TextMeshProUGUI>().text = PlayerPrefs.GetString(PlayerNameKey);
+            currentName.text = $"Current username: {PlayerPrefs.GetString(PlayerNameKey)}";
             continueButton.GetComponentInChildren<TextMeshProUGUI>().text = "Change name";
+            //settingsPanel.SetActive(false);
         }
         else
         {
             currentName.text = "";
-            nameInput.text = "Enter name...";
+            nameInput.placeholder.GetComponent<TextMeshProUGUI>().text = "Enter name...";
+            backButton.SetActive(false);
         }
     }
 
@@ -59,11 +63,19 @@ public class PlayerNameInput : MonoBehaviour
     public void setName()
     {
         var name = nameInput.text;
+        bool firstTime = !PlayerPrefs.HasKey(PlayerNameKey);
+
         PlayerPrefs.SetString(PlayerNameKey, name);
 
         currentName.text = "Current username: " + name;
 
         PhotonNetwork.NickName = name;
+
+        if (firstTime)
+        {
+            settingsPanel.SetActive(false);
+            disableNameInput();
+        }
     }
 
     public void onTextChanged()

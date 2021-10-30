@@ -16,6 +16,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
 
     [SerializeField] private GameObject settingsPanel = null;
     [SerializeField] private GameObject settingsButton = null;
+    [SerializeField] private GameObject backButton = null;
 
     [SerializeField] private TextMeshProUGUI waitingStatusText = null;
 
@@ -114,6 +115,7 @@ public class MainMenu : MonoBehaviourPunCallbacks
         settingsPanel.SetActive(true);
         GetComponent<PlayerNameInput>().enableNameInput();
         settingsButton.SetActive(false);
+        backButton.SetActive(true);
     }
     public void settings_back_onClick()
     {
@@ -129,8 +131,6 @@ public class MainMenu : MonoBehaviourPunCallbacks
 
     public void cancelConnection_onClick()
     {
-        //PhotonNetwork.LeaveRoom();
-        //PhotonNetwork.LeaveLobby();
         PhotonNetwork.Disconnect();
         singlePlayerButton.SetActive(true);
         multiPlayerButton.SetActive(true);

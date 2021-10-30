@@ -1357,6 +1357,7 @@ MonoBehaviour:
   cancelConnectionButton: {fileID: 126517149}
   settingsPanel: {fileID: 262058714}
   settingsButton: {fileID: 1889749582}
+  backButton: {fileID: 1696025681}
   waitingStatusText: {fileID: 342427535}
 --- !u!4 &670782246
 Transform:
@@ -1387,7 +1388,9 @@ MonoBehaviour:
   nameInput: {fileID: 1362794276}
   currentName: {fileID: 1269058257}
   continueButton: {fileID: 1747421604}
+  backButton: {fileID: 1696025681}
   uiButtons: []
+  settingsPanel: {fileID: 262058714}
 --- !u!1 &688742718
 GameObject:
   m_ObjectHideFlags: 0

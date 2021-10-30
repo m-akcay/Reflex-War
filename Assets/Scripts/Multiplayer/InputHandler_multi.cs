@@ -220,7 +220,7 @@ public class InputHandler_multi : MonoBehaviour
             {
                 setUpSpawner(l_spawnPositionAvailable, spawnPos);
 
-                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 5f && timeDiff > 0.3f)
+                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 15f && timeDiff > 0.3f)
                 {
                     spawnTroop();
                 }
