@@ -1,4 +1,4 @@
-﻿Shader "Unlit/ColorBlindFilter"
+﻿Shader "Unlit/BlurShader"
 {
     SubShader
     {

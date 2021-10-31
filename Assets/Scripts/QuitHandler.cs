@@ -15,6 +15,7 @@ public class QuitHandler : MonoBehaviour
 
     [SerializeField]
     private GameManager_multi gm_multi = null;
+
     private void Start()
     {
         quitPanel.SetActive(false);
