@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ColorBlindMaterial
+  m_Name: BlurMaterial
   m_Shader: {fileID: 4800000, guid: f3f25d3b8130b3e4bb5835a1b94b2af4, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
