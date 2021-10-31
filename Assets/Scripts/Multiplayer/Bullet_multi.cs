@@ -21,8 +21,6 @@ public class Bullet_multi : MonoBehaviourPun
     [SerializeField]
     private float forceMultiplier;
     private Rigidbody bulletRb;
-    private bool destroyTimerStarted = false;
-    private float lifeTime;
     private bool isAvailable 
     { 
         get 
@@ -36,16 +34,13 @@ public class Bullet_multi : MonoBehaviourPun
         _isAvailable = true;
         parentGo = this.transform.parent.gameObject;
     }
-    public void init(float reactionMultiplier, float lifeTime, float forceMultiplier, Transform target, Color color)
+    public void init(float reactionMultiplier, float forceMultiplier, Transform target, Color color)
     {
         bulletRb = this.GetComponent<Rigidbody>();
         bulletMat = this.GetComponent<Renderer>().material;
 
         var scaledReactionMultiplier = reactionMultiplier * GameManager_multi.getDifficultyMultiplier();
 
-        // WARNING
-        //this.lifeTime = lifeTime;
-        this.lifeTime = lifeTime ;
         this.forceMultiplier = forceMultiplier;
         this.damage = Shooter_multi.BASE_DAMAGE * scaledReactionMultiplier;
         this.target = target;
@@ -65,11 +60,6 @@ public class Bullet_multi : MonoBehaviourPun
         _isAvailable = false;
 
         shoot();
-
-        if (!destroyTimerStarted)
-        {
-            StartCoroutine(startDestroyTimer());
-        }
     }
     
     private void shoot()
@@ -115,18 +105,8 @@ public class Bullet_multi : MonoBehaviourPun
     private void shootSignal()
     {
         shoot();
-        if (!destroyTimerStarted)
-        {
-            StartCoroutine(startDestroyTimer());
-        }
     }
-    private IEnumerator startDestroyTimer()
-    {
-        destroyTimerStarted = true;
-        yield return new WaitForSeconds(this.lifeTime);
-        if (photonView.IsMine)
-            PhotonNetwork.Destroy(parentGo.transform.parent.gameObject);
-    }
+
     private void OnDestroy()
     {
         Destroy(this.bulletMat);

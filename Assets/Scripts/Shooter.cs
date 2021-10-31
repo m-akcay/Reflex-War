@@ -40,7 +40,7 @@ public class Shooter : MonoBehaviour
     }
 
     // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
-    public void init(float reactionMultiplier, float lifeTime)
+    public void init(float reactionMultiplier)
     {
         setTarget();
 

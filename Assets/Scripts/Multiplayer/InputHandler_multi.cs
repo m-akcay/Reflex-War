@@ -220,10 +220,7 @@ public class InputHandler_multi : MonoBehaviour
             {
                 setUpSpawner(l_spawnPositionAvailable, spawnPos);
 
-                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 15f && timeDiff > 0.3f)
-                {
-                    spawnTroop();
-                }
+                spawnTroop();
             }
         }
     }
@@ -310,7 +307,7 @@ public class InputHandler_multi : MonoBehaviour
             troop = PhotonNetwork.Instantiate("Prefabs/Shooter_online", spawnIndicator.transform.position, Quaternion.LookRotation(Vector3.back));
 
         //troop.GetComponent<Shooter_multi>().init(this.reactionMultiplier, GameManager_multi.getDifficulty() * 4);
-        troop.GetComponent<Shooter_multi>().init(this.reactionMultiplier, GameManager_multi.getDifficulty() * 40);
+        troop.GetComponent<Shooter_multi>().init(this.reactionMultiplier);
         gm.spawnAvailable = false;
         groundMat.SetInt("Boolean_D1E5A8E9", 0);
         gm.activeTroops.Add(troop);

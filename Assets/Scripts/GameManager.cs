@@ -157,6 +157,22 @@ public class GameManager : MonoBehaviour
 
         while (remainingTime > 0f && TOWERS.Count > 0)
         {
+            bool remainingTimeText_isActive = remainingTimeText.gameObject.activeInHierarchy;
+
+            if (this.reflexPhase)
+            {
+                if (remainingTimeText_isActive)
+                    remainingTimeText.gameObject.SetActive(false);
+
+                yield return new WaitForSecondsRealtime(0.5f);
+                continue;
+            }
+            else
+            {
+                if (!remainingTimeText_isActive)
+                    remainingTimeText.gameObject.SetActive(true);
+            }
+
             remainingTime = TimeLimit_seconds + this.referenceStartTime - Time.timeSinceLevelLoad;
             remainingTimeText.text = string.Format("{0:0}:{1:00}", Mathf.FloorToInt(remainingTime / 60), Mathf.FloorToInt(remainingTime) % 60);
             yield return new WaitForSecondsRealtime(1);

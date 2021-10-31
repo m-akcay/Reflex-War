@@ -26,14 +26,14 @@ public class QuitHandler : MonoBehaviour
         {
             if (gm && !gm.reflexPhase)
                 quitButton_touch.SetActive(true);
-            else if (gm_multi && !gm_multi)
+            else if (gm_multi && !gm_multi.reflexPhase)
                 quitButton_touch.SetActive(true);
 
-            if (Input.GetKeyDown(KeyCode.Escape))
-            {
-                quitButton_touch.SetActive(!quitButton_touch.activeInHierarchy);
-                quitPanel.SetActive(!quitPanel.activeInHierarchy);
-            }
+            //if (Input.GetKeyDown(KeyCode.Escape))
+            //{
+            //    quitButton_touch.SetActive(!quitButton_touch.activeInHierarchy);
+            //    quitPanel.SetActive(!quitPanel.activeInHierarchy);
+            //}
         }
         else
         {

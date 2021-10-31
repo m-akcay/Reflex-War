@@ -49,7 +49,7 @@ public class Shooter_multi : MonoBehaviourPun
         
     }
     // reactionMultiplier can take 3 values -> {1, 1.25, 1.5}
-    public void init(float reactionMultiplier, float lifeTime)
+    public void init(float reactionMultiplier)
     {
         setTarget();
 
@@ -65,12 +65,12 @@ public class Shooter_multi : MonoBehaviourPun
         color = GameManager_multi.getReactionColor(reactionMultiplier);
         mat.SetColor("Color_D1155CB1", color);
         
-        bullet.GetComponent<Bullet_multi>().init(reactionMultiplier, lifeTime, this.range * 0.2f, target,
+        bullet.GetComponent<Bullet_multi>().init(reactionMultiplier, this.range * 0.2f, target,
                                             color);
         
         if (photonView.IsMine)
         {
-            photonView.RPC("syncVars", RpcTarget.Others, reactionMultiplier, lifeTime);
+            photonView.RPC("syncVars", RpcTarget.Others, reactionMultiplier);
         }
         else
         {
@@ -209,11 +209,11 @@ public class Shooter_multi : MonoBehaviourPun
     }
 
     [PunRPC]
-    private void syncVars(float reactionMultiplier, float lifeTime)
+    private void syncVars(float reactionMultiplier)
     {
         if (!photonView.IsMine)
         {
-            this.init(reactionMultiplier, lifeTime);
+            this.init(reactionMultiplier);
         }
     }
 

@@ -69,7 +69,7 @@ public class InputHandler : MonoBehaviour
         spawnColor = white;
         lastAvailableSpawnPos = new Vector3();
         groundMat = GameObject.Find("Ground").GetComponent<Renderer>().material;
-        groundMat.SetInt("Boolean_D1E5A8E9", 1);
+        //groundMat.SetInt("Boolean_D1E5A8E9", 1);
     }
 
     void Update()
@@ -209,7 +209,7 @@ public class InputHandler : MonoBehaviour
                 touchPhaseStartPos = touch.position;
             }
             else if ((touch.phase == TouchPhase.Stationary || touch.phase == TouchPhase.Moved)
-                    && timeDiff < 2.5f)
+                    && timeDiff < 0.5f)
             // timeDiff condition is added to prevent spawning immediately after finishing reflex phase by mistake
             {
                 setUpSpawner(l_spawnPositionAvailable, spawnPos);
@@ -219,10 +219,7 @@ public class InputHandler : MonoBehaviour
                 //    $"posDiff     -> {Vector2.Distance(touch.position, touchPhaseStartPos)}" +
                 //    $"timeDiff -> {timeDiff}";
 
-                if (Vector2.Distance(touch.position, touchPhaseStartPos) < 15f && timeDiff > 0.3f)
-                {
-                    spawnTroop();
-                }
+                spawnTroop();
             }
         }
     }
@@ -304,7 +301,7 @@ public class InputHandler : MonoBehaviour
     {
         var prefab = Resources.Load("Prefabs/Shooter") as GameObject;
         var troop = Instantiate(prefab, spawnIndicator.transform.position, Quaternion.identity);
-        troop.GetComponent<Shooter>().init(this.reactionMultiplier, GameManager.getDifficulty() * 4);
+        troop.GetComponent<Shooter>().init(this.reactionMultiplier);
         gm.spawnAvailable = false;
         groundMat.SetInt("Boolean_D1E5A8E9", 0);
         gm.activeTroops.Add(troop);
